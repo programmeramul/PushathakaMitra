@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PustakaMitra AI - Nimma Interest, Nimma Next Book | Bengaluru Public Library Network</title>
+<!-- Google Fonts: Literata (Headline/Display), Source Sans 3 (Body), Public Sans (Label) -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..800;1,7..72,400..700&amp;family=Public+Sans:wght@400;500;600;700&amp;family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#fcfaf6",
+            "surface-container": "#f4efe6",
+            "surface-container-high": "#eae3d4",
+            primary: "#1b4332",
+            "primary-dark": "#133225",
+            "primary-container": "#e8f0eb",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#0e291e",
+            secondary: "#b45309",
+            "secondary-container": "#fef3c7",
+            "on-secondary": "#ffffff",
+            "on-secondary-container": "#78350f",
+            "on-surface": "#212529",
+            "on-surface-variant": "#5a5f57",
+            "outline-variant": "#dfd7c5",
+            accent: "#d97706",
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          spacing: {},
+          fontFamily: {
+            headline: ["Literata", "serif"],
+            display: ["Literata", "serif"],
+            body: ["\"Source Sans 3\"", "sans-serif"],
+            label: ["Public Sans", "sans-serif"]
+          },
+          fontSize: {}
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .kannada-subtext {
+      letter-spacing: 0.015em;
+    }
+    ::selection {
+      background-color: #d97706;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TOP NAVIGATION BAR (Shared Components JSON Anchor) -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant shadow-sm dark:shadow-none docked full-width top-0 sticky z-50 transition-all duration-150 ease-in-out">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+<!-- Brand Logo / Product Name -->
+<a class="flex items-center gap-3 group" href="#">
+<div class="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-sm group-hover:bg-primary-dark transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="menu_book">menu_book</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline text-xl font-bold text-primary dark:text-primary tracking-tight">PustakaMitra AI</span>
+<span class="text-xs font-label text-on-surface-variant kannada-subtext -mt-1 font-medium">ಪುಸ್ತಕಮಿತ್ರ AI • Bengaluru Edition</span>
+</div>
+</a>
+<!-- Primary Navigation Links (Web Desktop) -->
+<nav class="hidden md:flex items-center gap-8 font-body text-base">
+<!-- Active Nav: Home -->
+<a class="text-primary dark:text-primary font-semibold border-b-2 border-primary dark:border-primary pb-1 font-headline" href="#hero">Home</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-medium hover:text-on-surface dark:hover:text-on-surface transition-colors" href="#genres">Discover Books</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-medium hover:text-on-surface dark:hover:text-on-surface transition-colors" href="#libraries">Libraries</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-medium hover:text-on-surface dark:hover:text-on-surface transition-colors" href="#heritage">About</a>
+</nav>
+<!-- Trailing Cluster -->
+<div class="flex items-center gap-3 sm:gap-4">
+<!-- Language Switch Action with literal "translate" icon -->
+<button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-outline-variant hover:border-secondary bg-surface-container text-xs font-label font-semibold text-on-surface transition-colors" title="Toggle Language / ಭಾಷೆ ಬದಲಿಸಿ">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="translate">translate</span>
+<span>ಕನ್ನಡ / EN</span>
+</button>
+<a class="hidden sm:inline-flex text-sm font-label font-semibold text-on-surface-variant hover:text-primary px-3 py-2 transition-colors" href="#signin">
+          Sign In
+        </a>
+<a class="inline-flex items-center justify-center px-4 py-2 text-sm font-label font-bold text-on-primary bg-primary hover:bg-primary-dark rounded-xl shadow-sm transition-all duration-150 active:scale-95" href="#signup">
+          Sign Up
+        </a>
+</div>
+</div>
+</header>
+<main>
+<!-- HERO SECTION -->
+<section class="relative pt-12 pb-20 md:pt-16 md:pb-28 border-b border-outline-variant/60 overflow-hidden bg-gradient-to-b from-surface to-surface-container/40" id="hero">
+<!-- Subtle Decorative Kannada Watermark -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 select-none pointer-events-none opacity-5 text-primary text-9xl font-headline font-black leading-none hidden lg:block pr-6">
+        ಜ್ಞಾನಪೀಠ
+      </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+<div class="max-w-4xl mx-auto text-center flex flex-col items-center">
+<!-- Subhead pill badge -->
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary-container/80 border border-secondary/20 text-on-secondary-container text-xs sm:text-sm font-label font-medium mb-6 shadow-xs">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span>ಕರ್ನಾಟಕ ಸಾಹಿತ್ಯ &amp; ಗ್ರಂಥಾಲಯಗಳು • Bengaluru Reading Ecosystem</span>
+</div>
+<!-- Hero Headline -->
+<h1 class="font-headline text-3xl sm:text-5xl md:text-6xl font-bold text-on-surface leading-[1.18] tracking-tight mb-4">
+            Discover Your Next Great Read in Bengaluru
+            <span class="block text-2xl sm:text-3xl md:text-4xl text-primary font-normal italic mt-2 kannada-subtext">
+              ನಿಮ್ಮ ಮುಂದಿನ ಪುಸ್ತಕ ಇಲ್ಲಿದೆ
+            </span>
+</h1>
+<!-- Official Tagline & Exposition -->
+<p class="font-headline text-xl sm:text-2xl text-secondary font-semibold tracking-normal mt-1 mb-4">
+            “Nimma Interest, Nimma Next Book”
+          </p>
+<p class="font-body text-base sm:text-lg text-on-surface-variant max-w-2xl text-center leading-relaxed mb-8">
+            Personalized AI literary curation linked directly to physical shelves across <strong>28+ Bengaluru public libraries</strong>. From Cubbon Park’s iconic State Central Library to Malleshwaram and Basavanagudi branches.
+          </p>
+<!-- Search Canvas Box -->
+<div class="w-full max-w-3xl bg-surface p-2.5 sm:p-3 rounded-2xl border border-outline-variant shadow-md transition-shadow hover:shadow-lg">
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+<div class="relative flex-1 flex items-center pl-3">
+<span class="material-symbols-outlined text-on-surface-variant mr-2 text-2xl" data-icon="search">search</span>
+<input class="w-full bg-transparent border-0 text-on-surface placeholder:text-on-surface-variant/70 focus:ring-0 text-base font-body py-2.5 pl-0 pr-3 focus:outline-none" placeholder="Enter a theme, author, or emotion (e.g. 'rainy Malnad mystery', 'Kuvempu', 'Bengaluru startup angst')..." type="text"/>
+</div>
+<button class="bg-primary hover:bg-primary-dark text-on-primary font-label font-bold px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm">
+<span>Find Books &amp; Libraries</span>
+<span class="material-symbols-outlined text-lg" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Language and Category Filters inside search box -->
+<div class="mt-3 pt-3 border-t border-outline-variant/60 flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="text-on-surface-variant font-label font-medium pr-1">Language:</span>
+<button class="px-2.5 py-1 rounded-md bg-primary text-on-primary font-semibold">All Languages</button>
+<button class="px-2.5 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition-colors">Kannada ಕನ್ನಡ</button>
+<button class="px-2.5 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition-colors">English</button>
+<button class="px-2.5 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-medium transition-colors">Bilingual</button>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<span>Powered by Bengaluru Library Corpus AI</span>
+</div>
+</div>
+</div>
+<!-- Quick Discovery Tags -->
+<div class="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs font-label">
+<span class="text-on-surface-variant">Popular searches:</span>
+<a class="text-primary hover:text-secondary underline underline-offset-2 transition-colors" href="#shelf">Kuvempu</a>
+<span class="text-outline-variant">•</span>
+<a class="text-primary hover:text-secondary underline underline-offset-2 transition-colors" href="#shelf">Ghachar Ghochar</a>
+<span class="text-outline-variant">•</span>
+<a class="text-primary hover:text-secondary underline underline-offset-2 transition-colors" href="#shelf">Karanth</a>
+<span class="text-outline-variant">•</span>
+<a class="text-primary hover:text-secondary underline underline-offset-2 transition-colors" href="#shelf">Basavanagudi Vachanas</a>
+<span class="text-outline-variant">•</span>
+<a class="text-primary hover:text-secondary underline underline-offset-2 transition-colors" href="#shelf">Tejaswi Rainforest</a>
+</div>
+<!-- Stat Counters / Trust Strip -->
+<div class="mt-14 w-full grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-outline-variant pt-8">
+<div class="flex flex-col items-center sm:items-start text-center sm:text-left px-4">
+<div class="flex items-center gap-2 text-primary font-headline text-3xl font-extrabold">
+<span class="material-symbols-outlined text-2xl text-secondary" data-icon="account_balance">account_balance</span>
+<span>45+</span>
+</div>
+<span class="text-sm font-label font-medium text-on-surface-variant mt-1">Bengaluru Public Libraries Connected</span>
+</div>
+<div class="flex flex-col items-center sm:items-start text-center sm:text-left px-4 sm:border-l border-outline-variant">
+<div class="flex items-center gap-2 text-primary font-headline text-3xl font-extrabold">
+<span class="material-symbols-outlined text-2xl text-secondary" data-icon="library_books">library_books</span>
+<span>12,500+</span>
+</div>
+<span class="text-sm font-label font-medium text-on-surface-variant mt-1">Kannada &amp; English Cataloged Titles</span>
+</div>
+<div class="flex flex-col items-center sm:items-start text-center sm:text-left px-4 sm:border-l border-outline-variant">
+<div class="flex items-center gap-2 text-primary font-headline text-3xl font-extrabold">
+<span class="material-symbols-outlined text-2xl text-secondary" data-icon="inventory_2">inventory_2</span>
+<span>100% Live</span>
+</div>
+<span class="text-sm font-label font-medium text-on-surface-variant mt-1">Real-Time Shelf Availability</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION: EXPLORE BY MOOD & GENRE (Bento Layout) -->
+<section class="py-16 md:py-24 bg-surface" id="genres">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-outline-variant">
+<div>
+<span class="text-xs font-label uppercase tracking-widest text-secondary font-bold">Curated Classifications</span>
+<h2 class="font-headline text-2xl sm:text-4xl font-bold text-on-surface mt-1">
+              Explore by Mood &amp; Genre <span class="text-primary font-normal text-xl sm:text-2xl font-serif">/ ಸಾಹಿತ್ಯ ವಿಭಾಗಗಳು</span>
+</h2>
+</div>
+<p class="font-body text-sm text-on-surface-variant mt-2 md:mt-0 max-w-md">
+            Semantic vectors map your emotional mood directly to both modern Kannada bestsellers and timeless heritage editions.
+          </p>
+</div>
+<!-- Bento Grid for 7 Genres (Special Highlight on Kannada Literature) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Flagship Highlight Card: Kannada Literature (Span 2 cols on lg) -->
+<div class="sm:col-span-2 bg-gradient-to-br from-[#1b4332] to-[#122e22] text-white p-7 rounded-2xl border border-[#2d5a27] shadow-md flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-8 -bottom-8 w-48 h-48 bg-secondary/15 rounded-full blur-2xl pointer-events-none"></div>
+<div>
+<div class="flex items-center justify-between mb-4">
+<span class="px-3 py-1 rounded-full bg-secondary/30 border border-secondary/40 text-amber-200 text-xs font-label font-semibold">
+                  ಕನ್ನಡ ಸಾಹಿತ್ಯ • Flagship Archive
+                </span>
+<span class="material-symbols-outlined text-3xl text-amber-300" data-icon="auto_stories">auto_stories</span>
+</div>
+<h3 class="font-headline text-2xl sm:text-3xl font-bold text-white mb-2">
+                Kannada Literature &amp; Classics
+              </h3>
+<p class="text-sm text-emerald-100/90 font-body leading-relaxed max-w-lg mb-4">
+                From Kuvempu’s epic Sahyadri verses, Da Ra Bendre’s lyricism, to modern Navya and Dalit movements. Explore seminal masterworks that define Karnataka’s literary soul.
+              </p>
+</div>
+<div class="pt-4 border-t border-emerald-800/60 flex flex-wrap items-center justify-between gap-3 text-xs font-label">
+<div class="flex items-center gap-3">
+<span class="font-bold text-amber-300">4,200+ Books</span>
+<span class="text-emerald-300/50">•</span>
+<span class="text-emerald-200">Cubbon Park &amp; Kannada Sahitya Parishat</span>
+</div>
+<a class="inline-flex items-center gap-1 text-amber-300 font-bold hover:underline" href="#shelf">
+                Explore Archive <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</div>
+<!-- Genre 1: Horror -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="dark_mode">dark_mode</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Horror</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ಭಯಾನಕ • Horrifying Thrills</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                Ghost lore from Western Ghats folklore, eerie psychological tension, and nocturnal chills.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>680+ Titles</span>
+<span class="text-primary font-medium">Rajajinagar Branch</span>
+</div>
+</div>
+<!-- Genre 2: Supernatural -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="visibility">visibility</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Supernatural</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ಅಲೌಕಿಕ • Paranormal &amp; Mythic</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                Spirits, Daiva mythologies, supernatural mysteries, and folklore investigations.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>540+ Titles</span>
+<span class="text-primary font-medium">Malleshwaram Central</span>
+</div>
+</div>
+<!-- Genre 3: Spirituality -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="self_improvement">self_improvement</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Spirituality &amp; Wisdom</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ಆಧ್ಯಾತ್ಮಿಕ • Philosophy &amp; Kagga</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                DVG’s Mankuthimmana Kagga, Allama Prabhu vachanas, Advaita expositions, and meditative prose.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>1,850+ Titles</span>
+<span class="text-primary font-medium">Basavanagudi Circle</span>
+</div>
+</div>
+<!-- Genre 4: Mystery -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="search">search</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Mystery &amp; Whodunit</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ರಹಸ್ಯ • Detective &amp; Crime</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                Old Bangalore detective tales, police procedurals, historical capers, and suspense thrillers.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>1,120+ Titles</span>
+<span class="text-primary font-medium">Indiranagar Branch</span>
+</div>
+</div>
+<!-- Genre 5: Fantasy -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="fort">fort</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Fantasy &amp; Lore</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ಕಾಲ್ಪನಿಕ • Epic Worlds</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                Vijayanagara mythic reimaginings, high fantasy translations, and enchanted realm sagas.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>760+ Titles</span>
+<span class="text-primary font-medium">Jayanagar 4th Block</span>
+</div>
+</div>
+<!-- Genre 6: Technology -->
+<div class="bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-secondary transition-all hover:-translate-y-1 shadow-xs flex flex-col justify-between group">
+<div>
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary mb-4 border border-outline-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="memory">memory</span>
+</div>
+<h3 class="font-headline text-lg font-bold text-on-surface">Technology &amp; Silicon Plateau</h3>
+<span class="text-xs font-label text-secondary font-semibold block mb-2">ತಂತ್ರಜ್ಞಾನ • AI &amp; Innovation</span>
+<p class="text-xs text-on-surface-variant font-body leading-relaxed">
+                Bengaluru tech histories, digital ethics, AI manifestos, and Kannada computer science guides.
+              </p>
+</div>
+<div class="mt-5 pt-3 border-t border-outline-variant/60 flex items-center justify-between text-xs font-label text-on-surface-variant">
+<span>910+ Titles</span>
+<span class="text-primary font-medium">Koramangala Branch</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION: CURATED SHELF OF 6 POPULAR BOOK CARDS -->
+<section class="py-16 md:py-24 bg-surface-container/30 border-y border-outline-variant" id="shelf">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Header -->
+<div class="max-w-3xl mb-12">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-label font-bold mb-2">
+<span class="material-symbols-outlined text-sm" data-icon="recommend">recommend</span>
+<span>Real-Time Catalog Integration</span>
+</div>
+<h2 class="font-headline text-3xl sm:text-4xl font-bold text-on-surface tracking-tight">
+            Curated Shelf: Popular Recommendations
+          </h2>
+<p class="font-body text-base text-on-surface-variant mt-2 leading-relaxed">
+            Every title comes with contextual recommendation reasons from PustakaMitra AI and verified physical shelf availability across Bengaluru public libraries.
+          </p>
+</div>
+<!-- 6 Books Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+<!-- BOOK 1: Malegalalli Madumagalu -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An artistic book cover illustration depicting lush, mist-draped Western Ghats rainforest in Karnataka, with emerald green canopies, winding river currents, and traditional rustic village rooftops under overcast monsoon skies in a classic editorial literary style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJetddtE1nUUKAiMXvUDVbE5p0PkjeudtxIpvYHltZILrg4hlhULSEHHMgVK2c3_Q-_FItK451vDmCr8xmpMJk1RWODCjhqCbatuOso3ZxIec1FMvwlnKQojsiG0wHrg3JByLwlcXLORi3QNhoEOG4_PT2eGS7QwxH96VnZ19C2mKKtFMHtAL4cJn-bRFCN2_0oGEYUugiUjviChDYW7WRYXCbXH6SHWwdgMiZ_vn1zOVW8j7bGdCo3o2hSgUWS5JXKpsr5NgExMA"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">ಕನ್ನಡ ಕ್ಲಾಸಿಕ್ • Epic</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    Malegalalli Madumagalu
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಮಲೆಗಳಲ್ಲಿ ಮದುಮಗಳು</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">Kuvempu (ಕುಪ್ಪಳಿ ವೆಂಕಟಪ್ಪ ಪುಟ್ಟಪ್ಪ)</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.9</span>
+<span class="text-on-surface-variant">(1,420 ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “The quintessential portrait of Sahyadri ecosystem and human destiny. Recommended for readers yearning for deep agrarian heritage and multi-generational realism.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>State Central Library, Cubbon Park</strong> (3 copies on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+<!-- BOOK 2: Ghachar Ghochar -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A stylized book cover illustration showing a warm tea shop in urban Bengaluru, with steamy glasses of chai, vintage wooden furniture, tangled string motifs symbolizing modern domestic knotty dilemmas in muted ochre and dark olive tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDxAYbsF0z4We2izJum_TXJwEpC8wkCuuCukdae-zQA47lznJ87q7d0HVELVCroGjejNNDvj3prZecOlfoCqLSczhlY-iK5or1md0Fn5ieSmXmi47oITlP7iz61Dxqeoh7VY7xJdysnyXVtsdArEiH-ld86z5e3J5C9DqPs2mwaK_55t94TukPbBv5lYS9UsnlEWZhfteJTJfe16pMR3hqXW07lRXKbGfQjv_Qv5yxHoTWoAmg9NbQBXdfloMj4iJcXa-8z5y5tpQ"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">Modern Fiction • Bengaluru</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    Ghachar Ghochar
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಘಾಚರ್ ಘೋಚರ್</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">Vivek Shanbhag (ವಿವೇಕ ಶಾನಭಾಗ)</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.7</span>
+<span class="text-on-surface-variant">(3,890 ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “A masterclass in modern domestic tension set across coffee houses in Bengaluru. Ideal for lovers of concise psychological fiction examining sudden urban wealth.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>City Central Library, Malleshwaram</strong> (2 copies on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+<!-- BOOK 3: Parva -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An epic dramatic book cover artwork featuring ancient Indian chariot silhouettes on Kurukshetra horizon under deep amber and charcoal dusk sky, with brooding classical Indian philosophical motifs and textured parchment design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUxFJnAB55wM_6hQFqxakcW8iX8vWdXueDqmgtXCXz9LGKurRfDY42iPKMe_cTGXQa_wI2bmuu9w5kY27RZF0xkfsNwtmkSiOL2h1Nks8qYsL6dHaAJBwIUzyyrqxv6O0c6WXrj99zrBZBoTxAttnLImC-mzHBuii7LI0vMPlKdkDCd3MOUMBf97moVTcEEt26OSMIQE26NyN9S9y5mFESewbFFXN3BT9kiXgQHGcZxlyFhB10y-1Z7lusMDzq_HfiqDNAra7tJMA"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">Philosophical Epic • Classic</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    Parva
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಪರ್ವ (ಮಹಾಕಾವ್ಯ)</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">S.L. Bhyrappa (ಎಸ್. ಎಲ್. ಭೈರಪ್ಪ)</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.9</span>
+<span class="text-on-surface-variant">(2,710 ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “A daring, demythologized re-examination of the Mahabharata focusing on raw human psychology, mortality, and ethical crossroads without divine intervention.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>Basavanagudi Central Branch</strong> (4 copies on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+<!-- BOOK 4: Karvalo -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An illustrated vintage nature exploration book cover featuring a rare flying lizard perched in dense South Indian canopy, accompanied by naturalist field notebooks, magnifying loupe, and deep tropical green forest shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcyp2mddfkbI6g8Yxp5CcnBU2vy6NYTi11BeFikt7ni-dSjInWyiyPGVnCF1gA8qAK_FZbpLRML10BI0rPvG0fqnVlWh93445d2vkAttyzShkNF8XqJBpCtnYcaqDdEvxDSQ2z2lR-gydeZimv7M6uQfxD1nD4EA8TTrBsJg1-XK9wI7-ytPLl_TQFh7QLCko--CAVnMnwThVpD_X_g0mMIzxZtz3Mg-SNpIXRd7ZJYOeEJvDDz7CQRrNj6LRIn4WKy5TLDactTqo"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">Naturalist Mystery • Adventure</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    Karvalo
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಕಾರ್ವಾಲೊ</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">K.P. Poornachandra Tejaswi</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.8</span>
+<span class="text-on-surface-variant">(1,950 ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “A delightful naturalist expedition in Mudigere following the search for a mythical flying dragon lizard. Humorous, deeply observant, and scientifically poetic.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>Jayanagar Public Library</strong> (1 copy on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+<!-- BOOK 5: The Bangalore Detectives Club -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An illustrated period mystery book cover set in 1920s colonial Bangalore, featuring blooming jacaranda trees, heritage bungalows with red-tiled roofs, a sari-clad woman investigator silhouette with vintage magnifying lens and art deco lettering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGheBwc3zmurb3PANKsbccnBjc7f7KMAAnSuUdFBps1QugpaO7D9Uj81e51eBSVdv8l1KOIXsl5QbUwwN4bzc8HTk8UOdgSi6OQRJibBSt3_ZlYlTGZbyyDinDvLylAEtCp8GywB-x3MKttgus9B74StbiwMIqAdt3xBjxh3I7jUyQGQ3BxpuIzsyI31fOhBnpGYGeBWa5kNEEi55xnyi0JmzdAZ--eRGpZfParIbOGZ2k9n-MBrrjdKqj_q6K00537EXE3mWb4zA"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">Historical Mystery • 1920s BLR</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    The Bangalore Detectives Club
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಬೆಂಗಳೂರು ಡಿಟೆಕ್ಟಿವ್ಸ್ ಕ್ಲಬ್</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">Harini Nagendra</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">4.6</span>
+<span class="text-on-surface-variant">(1,120 ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “Charming cozy mystery evoking the botanical aromas, cantonment society, and street life of 1920s Bengaluru, anchored by a fiercely curious mathematician heroine.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>South End Circle Branch</strong> (2 copies on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+<!-- BOOK 6: Manku Thimmana Kagga -->
+<article class="bg-surface rounded-2xl border border-outline-variant p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow">
+<div>
+<!-- Book visual header -->
+<div class="flex gap-4 mb-4">
+<div class="w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An ornate sacred book cover design featuring golden Kannada typography of Manku Thimmana Kagga, traditional South Indian brass oil lamp with soft radiant halo, and old stone temple pillars rendered in warm saffron and ivory colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU1MsUcs8dIfn3f4Rag8LJSC1lK6UNK-XjRgNL55ttK4QIhMFaGKnwisNj7GE579Le874G0ZvxkbKit4-9wam7-3A1jTR4AAqBmgaA5ZBOGNFbYZhbrPNoBmEmdwnX0bDgbFY2wknVJYva9PVXTuhIwHSHLL6H8j0JE3BztHJdZqwOqC4Kc7jeHBxqUAG9FQTuzkUpTTiSe_EKI0oG1o2UhsBSnDTA1Pscil5VVSWyn18QR-lJdKJe2i_OEfJa8dBi7ZH1hTVGM44"/>
+</div>
+<div class="flex-1 flex flex-col">
+<span class="text-xs font-label font-semibold text-secondary uppercase tracking-wider">Philosophy &amp; Verses • Wisdom</span>
+<h3 class="font-headline text-xl font-bold text-on-surface mt-1 leading-snug">
+                    Manku Thimmana Kagga
+                  </h3>
+<span class="text-xs font-label text-on-surface font-medium kannada-subtext">ಮಂಕುತಿಮ್ಮನ ಕಗ್ಗ</span>
+<span class="text-xs text-on-surface-variant mt-1 font-body">D.V. Gundappa (ಡಿ. ವಿ. ಜಿ.)</span>
+<div class="flex items-center gap-1.5 mt-2 text-xs">
+<span class="material-symbols-outlined text-amber-500 text-sm" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-on-surface">5.0</span>
+<span class="text-on-surface-variant">(4,500+ ratings)</span>
+</div>
+</div>
+</div>
+<!-- AI Reason Quote Box -->
+<div class="bg-primary/5 rounded-xl p-3 border-l-4 border-primary mb-4 text-xs font-body text-on-surface leading-relaxed">
+<div class="flex items-center gap-1 font-label font-bold text-primary mb-1">
+<span class="material-symbols-outlined text-sm" data-icon="psychology">psychology</span>
+<span>Why PustakaMitra AI recommends this:</span>
+</div>
+                “Karnataka's Bhagavad Gita of everyday life. 945 philosophical stanzas offering calm equilibrium against urban anxiety, ego dilemmas, and existential questions.”
+              </div>
+<!-- Physical Library Badge -->
+<div class="flex items-center gap-2 text-xs font-label text-emerald-800 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 mb-5">
+<span class="material-symbols-outlined text-base text-emerald-700" data-icon="location_on">location_on</span>
+<span><strong>State Central Library, Cubbon Park</strong> (5 copies on shelf)</span>
+</div>
+</div>
+<!-- Action buttons -->
+<div class="flex items-center gap-2 pt-3 border-t border-outline-variant/70">
+<button class="flex-1 bg-primary hover:bg-primary-dark text-on-primary font-label text-xs font-bold py-2.5 px-3 rounded-lg transition-colors text-center">
+                Borrow / Reserve
+              </button>
+<button class="border border-outline-variant hover:border-primary text-on-surface font-label text-xs font-medium py-2.5 px-3 rounded-lg transition-colors">
+                Preview Excerpt
+              </button>
+</div>
+</article>
+</div>
+</div>
+</section>
+<!-- SECTION: CITYWIDE LIBRARY NETWORK CALLOUT BANNER -->
+<section class="py-16 md:py-24 bg-surface relative" id="libraries">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="bg-gradient-to-r from-surface-container via-surface to-surface-container rounded-3xl border border-outline-variant p-8 md:p-12 shadow-sm overflow-hidden relative">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- Left Info Column -->
+<div class="lg:col-span-7">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-secondary/15 text-secondary text-xs font-label font-bold mb-4">
+<span class="material-symbols-outlined text-base" data-icon="pin_drop">pin_drop</span>
+<span>Heritage Node • Cubbon Park</span>
+</div>
+<h2 class="font-headline text-2xl sm:text-4xl font-bold text-on-surface leading-tight mb-4">
+                Connected to Seshadri Iyer Memorial Hall &amp; 45+ Local Branches
+              </h2>
+<p class="font-body text-base text-on-surface-variant leading-relaxed mb-6">
+                Built in 1915, Bengaluru's red Tuscan-style State Central Library houses over 300,000 volumes, including Braille catalogs and palm-leaf manuscripts. With PustakaMitra AI, your single digital card reserves books across all municipal zonal libraries.
+              </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+<div class="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="badge">badge</span>
+<div>
+<h4 class="font-label font-bold text-xs text-on-surface">Universal Digital Reader ID</h4>
+<p class="text-xs text-on-surface-variant">Instant unified library barcode</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-surface rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="directions_bus">directions_bus</span>
+<div>
+<h4 class="font-label font-bold text-xs text-on-surface">Inter-Branch Pickup</h4>
+<p class="text-xs text-on-surface-variant">Collect books at your nearest metro station branch</p>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-4">
+<a class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary hover:bg-primary-dark text-on-primary font-label font-bold text-sm shadow-sm transition-all active:scale-95" href="#register">
+<span class="material-symbols-outlined text-lg" data-icon="add_card">add_card</span>
+<span>Get Your Free Library Pass</span>
+</a>
+<a class="inline-flex items-center gap-1.5 text-sm font-label font-semibold text-primary hover:text-secondary transition-colors" href="#map">
+<span>Explore Citywide Branch Map</span>
+<span class="material-symbols-outlined text-base" data-icon="open_in_new">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- Right Architectural Image Feature -->
+<div class="lg:col-span-5">
+<div class="relative rounded-2xl overflow-hidden shadow-md border border-outline-variant bg-surface aspect-[4/3]">
+<img class="w-full h-full object-cover" data-alt="The grand terracotta-red facade of Seshadri Iyer Memorial Hall State Central Library in Cubbon Park Bengaluru surrounded by lush green bamboo groves, colonial arches, and morning sunlight casting warm golden reflections on heritage stone pathways." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVCFaEIAT2BFFJRBb_bMH2hAsrAH5WTyTu28R8B1JXNOi2F4xVymWReCkdRA6wnhmR6qzEsYv_H5H9wqo1QjWOhdTLl0ayPgez0ixCVxwgTu4VqlTF63f7fLH6CKDcvB1KGnc7xdliBTNGHwoW-H67NiwQxAXq1wrhu6fQHy2rV9K_OJ_oxjB3gcGMsTb3_CnBmNm5Ah8K2MvvtRMdakODmm2Ziz-RfR1TY9jGHCWKtl8zd4ukbPjqrMUBkMd8zkMCvzfVjEysXyM"/>
+<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white">
+<p class="text-xs font-label uppercase tracking-widest text-amber-300 font-semibold">State Central Library</p>
+<p class="text-sm font-headline font-bold">Cubbon Park, Bengaluru • Established 1915</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- FOOTER (Shared Components JSON Anchor) -->
+<footer class="bg-surface-container dark:bg-surface-container border-t border-outline-variant dark:border-outline-variant docked full-width bottom flat no shadows font-body text-sm font-label">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-between gap-6">
+<!-- Top Brand Row -->
+<div class="w-full flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-outline-variant/60">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-xl" data-icon="menu_book">menu_book</span>
+</div>
+<div>
+<span class="font-headline text-lg font-bold text-on-surface dark:text-on-surface">PustakaMitra AI</span>
+<p class="text-xs text-on-surface-variant">Nimma Interest, Nimma Next Book</p>
+</div>
+</div>
+<!-- JSON links list -->
+<nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center">
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Bengaluru Public Libraries</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Kannada Sahitya Parishat</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Book Recommendations</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Terms of Service</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant text-sm hover:text-primary dark:hover:text-primary transition-colors duration-150" href="#">Contact</a>
+</nav>
+</div>
+<!-- Copyright & Dedication Text -->
+<div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant text-center sm:text-left">
+<p>© 2025 PustakaMitra AI. Dedicated to Bengaluru's public library network and Karnataka's rich literary heritage.</p>
+<div class="flex items-center gap-2">
+<span>ಸದಾ ಓದುಗರ ಒಡನಾಡಿ • Bengaluru Edition</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

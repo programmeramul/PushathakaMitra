@@ -1,7 +1,7 @@
 // Service layer — the ONLY place pages touch data. Swap the mock-backed
 // functions for MongoDB + Groq backend calls here; no key ever reaches the
 // frontend. `implementation` marks the current backing store.
-import { BOOKS, LIBRARIES, GENRES, AVAIL_LABEL } from "./mock-data.js";
+import { BOOKS, LIBRARIES, GENRES, AVAIL_LABEL } from "../mock-data.js";
 
 const implementation = "mock-data";
 
