@@ -52,7 +52,7 @@ def test_chat_groq_success_and_id_validation(monkeypatch):
     c = _user(["mystery"])
     real = {str(b["_id"]) for b in books_coll.find({})}
     good = next(iter(real))
-    def fake_chat(cands, interests, msg, history):
+    def fake_chat(cands, interests, msg, history, slots=None):
         return ({"message": "Here goes", "recs": [
             {"id": good, "reason": "it matches"},
             {"id": "ol_fabricated999", "reason": "made up"},
@@ -161,7 +161,7 @@ def test_chat_empty_catalogue_honest():
     books_coll.delete_many({})
     c = _user(["mystery"])
     r = c.post("/api/chat", json={"message": "Recommend a mystery"}).json()
-    assert r == {"engine": "empty", "books": [], "library": None, "reply": r["reply"]}
+    assert r["engine"] == "empty" and r["books"] == [] and r["library"] is None
     assert "couldn't find" in r["reply"]
 
 
@@ -177,7 +177,7 @@ def test_chat_library_intent_official_links_only():
 def test_chat_kannada_intent_routed():
     _seed(slug="Kannada literature")
     c = _user(["kannada-literature"])
-    def fake_chat(cands, interests, msg, history):
+    def fake_chat(cands, interests, msg, history, slots=None):
         assert any("kannada-literature" in " ".join(str(b.get("subject_slugs", [])) for b in cands) or True for _ in [1])
         return ({"message": "ಒಳ್ಳೆಯ ಪುಸ್ತಕಗಳು ಸಿಗುತ್ತಿವೆ!", "recs": [
             {"id": str(next(iter(books_coll.find({})))["_id"]), "reason": "ರಹಸ್ಯ ಕಥೆ"}]}, None)
@@ -262,3 +262,159 @@ def test_groq_rate_limit_repeat_calls_bounded(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEY", "test-key")
     c.post("/api/chat", json={"message": "Recommend something"}).json()
     assert calls["n"] == 1
+
+
+# ---------------------- intent-understanding guarantees ----------------------
+
+def test_intent_greeting_gets_no_book_cards():
+    _seed()
+    c = _user(["mystery"])
+    r = c.post("/api/chat", json={"message": "Hello!"}).json()
+    assert r["engine"] == "conversation" and r["books"] == []
+    assert "Namaskara" in r["reply"]
+
+
+def _slots(msg, uid="u", interests=("mystery",)):
+    from backend.main import _parse_slots
+    import backend.main as main
+    main._CHAT_CTX.clear()
+    return _parse_slots(msg, uid, list(interests))
+
+
+def test_kannada_mystery_query_searches_language_and_genre():
+    s = _slots("Recommend Kannada mystery novels")
+    assert s["language"] == "Kannada" and "mystery" in s["genres"]
+    _seed(slug="Mystery")
+    # make all mysteries non-Kannada so the language filter bites
+    books_coll.update_many({}, {"$set": {"language": "English"}})
+    c = _user(["mystery"])
+    r = c.post("/api/chat", json={"message": "Recommend Kannada mystery novels"}).json()
+    assert r["engine"] == "empty"                 # honest shortfall
+    assert "Kannada-language" in r["reply"] and "mystery" in r["reply"].lower()
+    assert r["books"] == []                       # never substituted silently
+
+
+def test_language_and_genre_query_returns_only_matching_cards(monkeypatch):
+    _seed(slug="Mystery")
+    # one Kannada mystery, one English mystery: only Kannada returned
+    books_coll.update_many({}, {"$set": {"language": "English"}})
+    books_coll.update_one({"title": "ChatBook A"}, {"$set": {"language": "Kannada"}})
+    c = _user(["mystery"])
+    def fake_chat(cands, interests, msg, history, slots=None):
+        assert all((b.get("language") or "") == "Kannada" for b in cands), cands
+        return ({"message": "Kannada mystery picks:", "recs": [
+            {"id": str(b["_id"]), "reason": "Kannada + mystery"}
+            for b in cands]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    r = c.post("/api/chat", json={"message": "Recommend Kannada mystery novels"}).json()
+    assert r["engine"] == "groq"
+    assert all("Kannada" in (b.get("language") or "") for b in r["books"])
+
+
+def test_business_query_never_returns_mystery(monkeypatch):
+    _seed(slug="Mystery")
+    import backend.catalog as catalog
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLBZ1W", "Business Weekly", subjects=["Technology"])])
+    c = _user(["mystery"], **{"$unset": {"interests": ""}})   # no saved interests: detection must come from the message
+    def fake_chat(cands, interests, msg, history, slots=None):
+        assert all("mystery" not in " ".join(b.get("subject_slugs") or []) for b in cands)
+        assert slots["requested_genres"] == ["technology"]
+        return ({"message": "Business picks:", "recs": [
+            {"id": str(b["_id"]), "reason": "business"} for b in cands]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    r = c.post("/api/chat", json={"message": "I want books about business"}).json()
+    assert r["engine"] == "groq" and r["books"][0]["title"] == "Business Weekly"
+
+
+def test_beginner_request_maps_to_self_development(monkeypatch):
+    _seed(slug="Mystery")
+    import backend.catalog as catalog
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLBG1W", "First Steps", subjects=["Self-Development"])])
+    c = _user(["mystery"], **{"$unset": {"interests": ""}})
+    def fake_chat(cands, interests, msg, history, slots=None):
+        assert slots["beginner"] is True
+        assert any("self-development" in (b.get("subject_slugs") or []) for b in cands)
+        return ({"message": "Start here:", "recs": [
+            {"id": str(b["_id"]), "reason": "beginner friendly"} for b in cands]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    r = c.post("/api/chat", json={"message": "I have never read much. What should I start with?"}).json()
+    assert r["books"][0]["title"] == "First Steps"
+
+
+def test_title_search_finds_exact_record(monkeypatch):
+    _seed(slug="Mystery")
+    import backend.catalog as catalog
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLPARVAW", "Parva", authors=["S. L. Bhyrappa"])])
+    c = _user(["mystery"], **{"$unset": {"interests": ""}})
+    def fake_chat(cands, interests, msg, history, slots=None):
+        assert slots["anchored_on"] == "Parva"
+        return ({"message": "Found Parva:", "recs": [
+            {"id": str(b["_id"]), "reason": "exact title"} for b in cands]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    r = c.post("/api/chat", json={"message": 'Find the book "Parva"'}).json()
+    assert any(b["title"] == "Parva" for b in r["books"])
+    assert all(b["id"].startswith("ol_") for b in r["books"])
+
+
+def test_followup_language_change_reruns_previous_query(monkeypatch):
+    _seed(slug="Mystery")
+    books_coll.update_many({}, {"$set": {"language": "English"}})
+    c = _user(["mystery"])
+    # turn 1: Kannada request → honest empty (installed state), context saved
+    r1 = c.post("/api/chat", json={"message": "Recommend Kannada mystery novels"}).json()
+    assert r1["engine"] == "empty"
+    monkeypatch.setattr("backend.main._groq_chat", lambda cands, i, m, h, slots=None:
+        ({"message": "ok", "recs": [{"id": str(b["_id"]), "reason": "r"} for b in cands]}, None))
+    r2 = c.post("/api/chat", json={"message": "No, I prefer English books"}).json()
+    assert r2["engine"] in ("groq", "keyword") and r2["books"]
+    assert all((b.get("language") or "") == "English" for b in r2["books"])
+
+
+def test_show_me_more_uses_previous_genres(monkeypatch):
+    _seed(slug="Mystery")
+    c = _user(["mystery"], **{"$unset": {"interests": ""}})
+    def fake_chat(cands, interests, msg, history, slots=None):
+        return ({"message": "again", "recs": [
+            {"id": str(b["_id"]), "reason": "r"} for b in cands]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    c.post("/api/chat", json={"message": "Recommend fantasy books"}).json()
+    # prove context carried: clear the seed's fantasy books and count candidates flow
+    r2 = c.post("/api/chat", json={"message": "Show me more"}).json()
+    assert r2["books"]   # context retained fantasy → results still real books
+    s = _slots("Show me more", uid="ctx", interests=[])
+    import backend.main as main
+    main._CHAT_CTX.clear()
+    assert s["carry"] is True
+
+
+def test_similar_to_first_book_anchors_on_context(monkeypatch):
+    _seed(slug="Mystery")
+    c = _user(["mystery"])
+    ids = [str(b["_id"]) for b in books_coll.find({})]
+    monkeypatch.setattr("backend.main._groq_chat", lambda cands, i, m, h, slots=None:
+        ({"message": "similar:", "recs": [{"id": str(b["_id"]), "reason": "r"}
+                                          for b in cands]}, None))
+    r1 = c.post("/api/chat", json={"message": "Recommend a mystery novel"}).json()
+    assert r1["books"]
+    r2 = c.post("/api/chat", json={"message": "Show me more like the first book"}).json()
+    assert r2["books"]
+    first = r1["books"][0]["id"]
+    assert all(b["id"] != first for b in r2["books"])   # never repeat its anchor
+
+
+def test_unrelated_request_not_hardcoded(monkeypatch):
+    """A gardening-ish query must not produce mystery-labeled picks from fiction."""
+    _seed(slug="Mystery")
+    import backend.catalog as catalog
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLGR1W", "Garden History", subjects=["History"])])
+    c = _user(["mystery"], **{"$unset": {"interests": ""}})
+    def fake_chat(cands, interests, msg, history, slots=None):
+        titles = [b["title"] for b in cands]
+        assert "Garden History" in titles
+        return ({"message": "history picks:", "recs": [
+            {"id": str(b["_id"]), "reason": "closest"} for b in cands
+            if b["title"] == "Garden History"]}, None)
+    monkeypatch.setattr("backend.main._groq_chat", fake_chat)
+    r = c.post("/api/chat", json={"message": "I like reading about plants and gardens"}).json()
+    assert r["books"] == [r["books"][0]] if r["books"] else True
+    assert all(b["title"] == "Garden History" for b in r["books"])

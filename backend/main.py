@@ -20,6 +20,7 @@ import os
 import re
 import secrets
 import socket
+from collections import Counter
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -590,7 +591,7 @@ class ChatIn(BaseModel):
     locality: Optional[str] = Field(default=None, max_length=80)
 
 
-_KN_HINTS = ("ಕನ್ನಡ", "ಪುಸ್ತಕ", "ಓದು", "ಗ್ರಂಥಾಲಯ", "ಪುಸ್ತಕಾಲಯ")
+_KN_HINTS = ("ಕನ್ನಡ", "ಓದು", "ಪುಸ್ತಕ")          # generic Kannada words (language only via _KANNADA_RE)
 _LIBRARY_HINTS = ("library", "librar", "granthalaya", "ಗ್ರಂಥಾಲಯ", "ಪುಸ್ತಕಾಲಯ",
                   "ಗ್ರಂಥಾಲಯದ")
 _GENRE_HINTS = {
@@ -603,7 +604,8 @@ _GENRE_HINTS = {
     "spirituality": ("spiritual", "spirituality", "ಆಧ್ಯಾತ್ಮ"),
     "philosophy": ("philosophy", "ತತ್ವ", "ತತ್ವಶಾಸ್ತ್ರ"),
     "history": ("history", "ಇತಿಹಾಸ"),
-    "technology": ("technology", "business", "ತಂತ್ರಜ್ಞಾನ"),
+    "technology": ("technology", "business", "econom", "management", "finance",
+                   "ತಂತ್ರಜ್ಞಾನ"),
     "biography": ("biography", "leader", "leadership", "ಜೀವನಚರಿತ್ರೆ"),
     "self-development": ("self-help", "self development", "beginner", "start reading",
                          "ಸ್ವಯಂ"),
@@ -618,28 +620,222 @@ def _book_card(b: dict) -> dict:
     return c
 
 
-def _candidates_for(message: str, interests: list) -> list:
-    msg = message.lower()
-    want_kn = "kannada" in msg or any(h in message for h in _KN_HINTS)
-    slugs = {s for s in interests}
+# ------------------------- request understanding -------------------------
+# Deterministic slot+intent parsing (language words, genres, difficulty,
+# follow-ups). The Groq prompt receives these slots so its reply reflects what
+# the user actually asked — never a canned recommendation.
+
+_CHAT_CTX: dict = {}        # str(user_id) -> {"genres", "language", "last_cards"}; per-user, per-process
+
+_GREET_RE = re.compile(
+    r"^\s*(hi|hello|hey|namaskara|namaskaragalu|namaste|hai|thanks|thank you|"
+    r"dhanyavadagalu|ಧನ್ಯವಾದ|ನಮಸ್ಕಾರ)\b[!.]?\s*[!.\s]*$", re.I)
+_KANNADA_RE = re.compile(r"\b(kannada|ಕನ್ನಡ)\b", re.I)
+_ENGLISH_RE = re.compile(r"\b(english|ಇಂಗ್ಲೀಷ್|ಇಂಗ್ಲಿಷ್)\b", re.I)
+_BEGINNER_RE = re.compile(r"\b(beginner|beginners|new reader|new to reading|first book|"
+                          r"start reading|start with|never read|easy height|easy read|just starting)\b", re.I)
+_PREFER_RE = re.compile(r"^\s*(no|nope|not that|actually)\b", re.I)
+_SELF_RE = r"\b(first book|previous pick|the first one|that book)\b"
+_MORE_RE = re.compile(r"\b(more|another|other options|innu|ಇನ್ನೊಂದು)\b", re.I)
+_SIMILAR_RE = re.compile(
+    r"(?:similar to|like)\s+(?:the\s+|a\s+)?" +
+    r"((?:first book|previous pick|the first one|that book)|[\"“']?[A-Za-z0-9\u0c80-\u0cde .'\-]{2,40})\b",
+    re.I)
+_TITLE_Q_RE = re.compile(r"[\"“']([A-Za-z0-9\u0c80-\u0cde][^\"”']{2,60})[\"”']")
+_TITLE_HINT_RE = re.compile(
+    r"\b(find|search|look up|do you have|show me)\s+(?:the\s+)?book\s+[\"“']?([A-Za-z0-9\u0c80-\u0cde .'\-]{2,60})\b",
+    re.I)
+
+
+def _parse_slots(msg: str, user_id: str, interests: list) -> dict:
+    """Slots for THIS message only; carry-over from _CHAT_CTX for follow-ups
+    ("show me more", "no, English instead"). No cross-user mixing."""
+    m = msg.lower()
+    ctx = _CHAT_CTX.get(user_id, {})
+    s = {"mode": "recommend", "genres": set(), "language": None,
+         "beginner": _BEGINNER_RE.search(msg) is not None,
+         "similar_to": None, "title": None, "topics_detected": False,
+         "carry": False}
+    if _GREET_RE.match(msg):
+        s["mode"] = "greet"
+        return s
+    if any(h in msg for h in _LIBRARY_HINTS):
+        s["mode"] = "library"
+        return s
+    if _KANNADA_RE.search(msg):
+        s["language"] = "Kannada"
+    elif _ENGLISH_RE.search(msg):
+        s["language"] = "English"
     for slug, hints in _GENRE_HINTS.items():
-        if any(h in msg for h in hints):
+        if any(h in m for h in hints):
+            s["genres"].add(slug)
+    if s["genres"]:
+        s["topics_detected"] = True
+    # similar-to: "Show me more like the first book" / "similar to Parva"
+    sm = _SIMILAR_RE.search(msg)
+    if sm:
+        ref = (sm.group(1) or "").strip()
+        s["mode"] = "similar"
+        if re.search(_SELF_RE, ref, re.I) or "first book" in ref.lower():
+            last = (ctx.get("last_cards") or [])
+            s["similar_to"] = last[0] if last else None
+            s["carry"] = True
+        else:
+            s["similar_to"] = ref.rstrip(".!") if ref.rstrip(".!") else None
+        if not s["genres"]:
+            s["topics_detected"] = True
+    elif _MORE_RE.search(m) and not s["genres"]:
+        # "Show me more" → continue the previous query
+        s["carry"] = True
+    elif _TITLE_Q_RE.search(msg) or _TITLE_HINT_RE.search(msg):
+        q = _TITLE_Q_RE.search(msg)
+        s["title"] = (q.group(1) if q else _TITLE_HINT_RE.search(msg).group(2)).strip()
+        s["mode"] = "title"
+    elif _PREFER_RE.match(msg) or (s["language"] and not s["genres"]):
+        # follow-up correction: use previous topics with the new language
+        s["carry"] = True
+    # carry previous context for this turn when the user references it
+    if s["carry"]:
+        s["genres"] = s["genres"] or set(ctx.get("genres") or [])
+        s["language"] = s["language"] or ctx.get("language")
+        if s["language"]:
+            s["topics_detected"] = True
+    if s["beginner"] and not s["genres"]:
+        s["genres"].add("self-development")
+    # remember the language preference across turns ("no, I prefer English books")
+    if s["language"]:
+        ctx["language"] = s["language"]
+        _CHAT_CTX[user_id] = ctx
+    return s
+
+
+def _topic_text_query(words: list, language: Optional[str]) -> dict:
+    """Regex match over title/subjects/description; ANY topic word matches."""
+    fields = ("title", "subjects", "description")
+    ors = [{f: {"$regex": re.escape(w), "$options": "i"}}
+           for w in words for f in fields]
+    if language:
+        return {"$and": [{"$or": ors}, {"language": language}]}
+    return {"$or": ors}
+
+
+def _find_candidates(s: dict, interests: list) -> tuple:
+    """Real Mongo retrieval for the parsed slots. Returns (docs, note) where
+    note explains any honest shortfall. Never substitutes unrelated books."""
+    similar = s.get("similar_to")
+    if s["mode"] == "similar" and similar:
+        anchor = None
+        if isinstance(similar, dict):          # "the first book" → previous card
+            anchor = books_coll.find_one({"_id": similar["id"]}) if similar.get("id") is not None else None
+        else:                                   # an actual title name
+            anchor = _find_by_title(similar)
+            anchor = anchor[0] if anchor else None
+        if anchor:
+            terms = [{"title": {"$regex": re.escape(anchor["title"]), "$options": "i"}},
+                     {"authors": {"$regex": re.escape((anchor.get("authors") or [""])[0]),
+                                  "$options": "i"}}]
+            if anchor.get("subject_slugs"):
+                terms.append({"subject_slugs": {"$in": sorted(anchor["subject_slugs"])}})
+            docs = list(books_coll.find(
+                {"_id": {"$ne": anchor["_id"]}, "$or": terms}, limit=40))
+            if s["language"]:
+                kn = [d for d in docs if (d.get("language") or "") == s["language"]]
+                if kn:
+                    docs = kn
+            return docs, None
+        return [], f"I couldn't find \"{similar}\" in the catalogue to anchor similar picks."
+    if s["mode"] == "title" and s["title"]:
+        docs = _find_by_title(s["title"])
+        if docs:
+            return docs, None
+        return [], f"No record titled \"{s['title']}\" in the catalogue."
+    # normal recommendation search: explicit topics win; else real saved interests
+    want = set(s["genres"]) if s["genres"] else set(interests)
+    q: dict = {}
+    if want:
+        q["subject_slugs"] = {"$in": sorted(want)}
+    note = None
+    if s["language"]:
+        asked = ", ".join(sorted(s["genres"])) or "that topic"
+        words = [h for slug in s["genres"] for h in _GENRE_HINTS[slug]
+                 if h.isascii() and len(h) > 3]
+        if q:
+            docs = list(books_coll.find({**q, "language": s["language"]}, limit=60))
+            if docs:
+                return docs, None
+            # slug query failed: try topic text search within the language
+            text_docs = []
+            if words:
+                text_docs = list(books_coll.find(
+                    _topic_text_query(words[:3], s["language"]), limit=60))
+            if text_docs:
+                return text_docs, None
+            # honest shortfall: don't substitute other languages silently
+            others = list(books_coll.find(q, limit=60))
+            langs = Counter((d.get("language") or "unknown") for d in others).most_common(3)
+            listing = ", ".join(f"{l} ({n})" for l, n in langs)
+            hint = (f"that topic exists in: {listing}" if listing else
+                    ("nothing matches it in the catalogue — try asking about "
+                     f"'{sorted(s['genres'])[0].replace('-', ' ')}' "
+                     "without the language filter" if s["genres"] else
+                     "nothing matches it in the catalogue — try another topic"))
+            kn_total = books_coll.count_documents({"language": s["language"]})
+            extra = (f" The catalogue has {kn_total} {s['language']}-language "
+                     "books in other topics — ask for one of those genres."
+                     if kn_total else "")
+            return [], (f"No {s['language']}-language {asked} books in the "
+                        f"catalogue — {hint}.{extra}")
+        docs = list(books_coll.find({"language": s["language"]}, limit=80))
+        if docs:
+            return docs, None
+        return [], f"No {s['language']}-language books match right now."
+    if q:
+        docs = list(books_coll.find(q, limit=60))
+        if docs:
+            return docs, None
+        # genre slugs with no exact hits: real text search over title/subjects/
+        # description for that topic (slug coverage in the import is uneven)
+        words = [h for slug in s["genres"] for h in _GENRE_HINTS[slug]
+                 if h.isascii() and len(h) > 3]
+        if words and not s["carry"]:
+            docs = list(books_coll.find(_topic_text_query(words, None), limit=60))
+            if docs:
+                return docs, None
+        return [], None
+    # nothing actionable: a broad relevance slice of the real catalogue
+    return list(books_coll.find({}, limit=40)), "no_topic"
+
+
+def _find_by_title(title: str) -> list:
+    t = title.strip().rstrip(".!")
+    if not t:
+        return []
+    out = list(books_coll.find(
+        {"title": {"$regex": re.escape(t), "$options": "i"}}, limit=5))
+    if not out:                       # normalized-ish: first few significant words
+        words = [w for w in re.split(r"[\s'.]+", t) if len(w) > 2][:3]
+        if words:
+            out = list(books_coll.find(
+                {"$and": [{"title": {"$regex": re.escape(w), "$options": "i"}}
+                          for w in words]}, limit=5))
+    return out
+
+
+def _candidates_for(message: str, interests: list) -> list:
+    """Legacy helper kept for tests/topics NOTE ( replaced by _find_candidates)."""
+    slugs = set(interests)
+    for slug, hints in _GENRE_HINTS.items():
+        if any(h in message.lower() for h in hints):
             slugs.add(slug)
-    if not slugs:
-        slugs = {s for s in interests} or set()   # fall back to real saved interests
-    cur: dict = {}
-    slug_list = sorted(slugs)
-    if slug_list:
-        cur["subject_slugs"] = {"$in": slug_list}
-    if want_kn:
-        cur["language"] = "Kannada"
-    cands = list(books_coll.find(cur, limit=60)) or \
-        list(books_coll.find({"subject_slugs": {"$in": slug_list}} if slug_list else {},
-                             limit=60))
-    return cands
+    q = {"subject_slugs": {"$in": sorted(slugs)}} if slugs else {}
+    if "kannada" in message.lower():
+        kn = list(books_coll.find({**q, "language": "Kannada"}, limit=60))
+        if kn:
+            return kn
+    return list(books_coll.find(q, limit=60))
 
 
-def _groq_chat(cands: list, interests: list, message: str, history: list):
+def _groq_chat(cands: list, interests: list, message: str, history: list, slots=None):
     """Groq chat turn over candidates. Returns ({message, recs}|None, reason|None);
     reason is a safe code from _GROQ_REASONS when result is None."""
     key = os.environ.get("GROQ_API_KEY")
@@ -647,10 +843,12 @@ def _groq_chat(cands: list, interests: list, message: str, history: list):
         return None, "config_missing"
     if not cands:
         return None, "no_candidates"
+    slots = slots or {}
     payload = {"interests": interests, "candidates": [
         {"id": str(b["_id"]), "title": b["title"], "authors": b.get("authors") or [],
-         "year": b.get("year"), "categories": b.get("subject_slugs") or []}
-        for b in cands[:40]]}
+         "year": b.get("year"), "categories": b.get("subject_slugs") or [],
+         "language": b.get("language")}
+        for b in cands[:30]]}
     body = json.dumps({
         "model": GROQ_MODEL, "temperature": 0.4, "max_tokens": 500,
         "response_format": {"type": "json_object"},
@@ -658,12 +856,17 @@ def _groq_chat(cands: list, interests: list, message: str, history: list):
             {"role": "system", "content":
              "You are PustakaMitra AI, a warm reading companion for Kannada and "
              "English readers in Bengaluru. Answer in the user's language "
-             "(Kannada or English). Recommend from the given candidates ONLY. "
-             "Reply with strict JSON: {\"message\": \"<2-4 friendly sentences>\", "
-             "\"recommendations\": [{\"id\": \"<candidate id>\", \"reason\": "
-             "\"<one short sentence>\"}]}. Use only candidate ids from the list. "
-             "Never invent books, ratings, or library availability. Do not repeat "
-             "books already given in the conversation history."},
+             "(Kannada or English). The user's intent was parsed as: "
+             + json.dumps(slots) +
+             ". Recommend from the given candidates ONLY. Reply with strict "
+             "JSON: {\"message\": \"<2-3 short sentences, on-topic, no filler "
+             "greetings>\", \"recommendations\": [{\"id\": \"<candidate id>\", "
+             "\"reason\": \"<one sentence explaining the match using only the "
+             "candidate's own metadata>\"}]}. Use only candidate ids from the "
+             "list. If no candidate fits what was asked, return few or zero "
+             "recommendations and say so honestly. Never invent books, ratings, "
+             "or library availability. Do not repeat books already given in the "
+             "conversation history."},
             {"role": "user", "content": json.dumps(
                 {"history": history[-6:], "message": message, "context": payload})},
         ],
@@ -729,41 +932,98 @@ def _library_links(message: str, locality: Optional[str]) -> dict:
 @app.post("/api/chat")
 def chat(data: ChatIn, user: dict = Depends(_current_user)):
     msg = data.message.strip()
-    # honest guard: chatbot is for users who completed onboarding (interests saved)
-    interests = user.get("interests") or []
+    user_id = str(user["_id"])
+    interests = [i for i in (user.get("interests") or []) if i]
     history = [h for h in data.history if
                isinstance(h, dict) and isinstance(h.get("role"), str)
-               and isinstance(h.get("content"), str)][:10]
-    if any(h in msg for h in _LIBRARY_HINTS) or (data.locality or "").strip():
-        return {"engine": "links", "reply":
-                "I can point you to official library search pages — "
-                "I don't have verified Bengaluru holdings data yet.",
-                "books": [], "library": _library_links(msg, data.locality)}
-    cands = _candidates_for(msg, interests)
-    if not cands:
-        return {"engine": "empty", "reply":
-                "I couldn't find anything in the catalogue for that yet — try "
-                "another topic or genre and I'll look again. (The catalogue is "
-                "real Open Library records, so not everything is available.)",
+               and isinstance(h.get("content"), str)
+               and h["role"] in ("user", "bot")][:10]
+    s = _parse_slots(msg, user_id, interests)
+
+    ctx = _CHAT_CTX.setdefault(user_id, {})
+
+    if s["mode"] == "greet":
+        # greetings get a greeting — never a wall of book cards
+        return {"engine": "conversation", "reply":
+                "Namaskara! What would you love to read today?" if not history
+                else "Namaskara! What can I find for you next?",
                 "books": [], "library": None}
-    groq, groq_err = _groq_chat(cands, interests, msg, history)
-    if groq and groq["recs"]:
+
+    if s["mode"] == "library":
+        return {"engine": "links", "reply":
+                "I can point you to official library search pages — I don't "
+                "have verified Bengaluru holdings data yet.",
+                "books": [], "library": _library_links(msg, data.locality)}
+
+    cands, note = _find_candidates(s, interests)
+
+    if not cands:
+        # honest: nothing matches this exact request — no substitution
+        return {"engine": "empty", "reply":
+                (note or "I couldn't find anything matching that in the real "
+                 "Open Library catalogue yet — try another topic or genre and "
+                 "I'll look again."),
+                "books": [], "library": None,
+                "suggested_genres": sorted(set(interests))[:4] or ["mystery",
+                "history", "kannada-literature", "self-development"]}
+
+    def _cards(picks):
         by_id = {str(b["_id"]): b for b in cands}
-        return {"engine": "groq", "reply": groq["message"] or
-                "Here are some picks from the catalogue:",
-                "books": [_book_card(by_id[r["id"]]) for r in groq["recs"]
-                          if r["id"] in by_id],   # re-validate: never trust model ids
-                "library": None}
-    # deterministic fallback — clearly labelled with the REAL cause, never smart-AI
-    reason = groq_err or "no_candidates"
-    explain = _GROQ_REASONS.get(reason, "The AI service is unavailable.")
-    ranked = _keyword_rank(cands, interests, limit=4)
+        return [_book_card(by_id[r["id"]]) for r in picks if r["id"] in by_id]
+
+    def _remember(ids):
+        # carry genre/language context and last-answer cards for follow-ups
+        if s["genres"]:
+            ctx["genres"] = sorted(s["genres"])
+        elif s["carry"]:
+            ctx.setdefault("genres", [])
+        if s["language"]:
+            ctx["language"] = s["language"]
+        ctx["last_cards"] = [{"id": bid, "title": by["title"]}
+                             for bid, by in ((str(b["_id"]), b) for b in cands)
+                             if bid in ids][:6]
+        _CHAT_CTX[user_id] = ctx
+
+    groq, groq_err = _groq_chat(cands, interests, msg, history, slots={
+        "intent": s["mode"],
+        "requested_genres": sorted(s["genres"]) or None,
+        "requested_language": s["language"],
+        "beginner": s["beginner"],
+        "anchored_on": (s["similar_to"]["title"] if isinstance(s["similar_to"], dict)
+                        else s["similar_to"] if s["similar_to"] else s["title"]) or None,
+    })
+    if groq and groq["recs"]:
+        books = _cards([{**r} for r in groq["recs"]])
+        if books:
+            _remember({b["id"] for b in books})
+            return {"engine": "groq", "reply": groq["message"] or
+                    "Here are the best matches from the real catalogue:",
+                    "books": books, "library": None}
+    # deterministic fallback / model-returned-nothing — labelled, real cause
+    reason = groq_err or "model_no_picks"
     by_id = {str(b["_id"]): b for b in cands}
-    return {"engine": "keyword", "fallback_reason": reason,
-            "reply": f"({explain}) Genre-matched picks from the real catalogue:",
-            "books": [{**_book_card(by_id[r["id"]]), "reason": r["reason"]}
-                      for r in ranked if r["id"] in by_id],
-            "library": None}
+    ranked = _keyword_rank(cands, interests, limit=4)
+    books = [{**_book_card(by_id[r["id"]]), "reason": r["reason"]}
+             for r in ranked if r["id"] in by_id]
+    explain = _GROQ_REASONS.get(reason)
+    prefix = f"({explain}) " if explain else ""
+    _remember({b["id"] for b in books})
+    if reason == "model_no_picks" and groq and groq["message"]:
+        reply = groq["message"]                # Groq worked; no books fit — use its words
+    elif reason == "model_no_picks":
+        reply = ("I couldn't pick a confident match from the real catalogue "
+                 "for that — here are the closest real records:")
+    else:
+        reply = f"{prefix}Genre-matched picks from the real catalogue:"
+    return {"engine": "keyword", "fallback_reason": reason, "reply": reply,
+            "books": books, "library": None}
+
+
+@app.get("/api/chat/status")
+def chat_status():
+    """Frontend can probe availability without calling Groq."""
+    return {"groq_configured": bool(os.environ.get("GROQ_API_KEY")),
+            "model": GROQ_MODEL, "library_dataset_imported": False}
 
 
 if __name__ == "__main__":
