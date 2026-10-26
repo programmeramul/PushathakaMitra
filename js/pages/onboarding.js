@@ -80,21 +80,34 @@ function wire() {
   main.querySelectorAll("[data-level]").forEach((c) => c.addEventListener("click", () => { state.level = c.dataset.level; paint(); }));
   main.querySelector("#back").addEventListener("click", () => { step = Math.max(0, step - 1); paint(); });
   main.querySelector("#next").addEventListener("click", async () => {
-    if (step === 0 && !state.genres.length) { alert("Pick at least one genre to continue"); return; }    if (step === 3) {
-      // persist onboarding to the AUTHENTICATED user's Mongo document
-      // mock chip ids map onto the backend's canonical genre vocabulary
+    if (step === 0 && !state.genres.length) { alert("Pick at least one genre to continue"); return; }
+    if (step === 3) {
+      // persist onboarding to the AUTHENTICATED user's Mongo document;
+      // redirect ONLY after the API confirms the write.
       const backendGenres = state.genres.map((g) => (g === "kannada" ? "kannada-literature" : g));
-      const local = JSON.parse(localStorage.getItem("pustakamitra.profile.v1") || "{}");
+      const btn = main.querySelector("#next");
+      if (btn.disabled) return;                      // prevent duplicate submissions
+      btn.disabled = true;
+      btn.textContent = "Saving…";
       try {
         await authApi.updateMe({
           interests: backendGenres,
+          other_interest: null,
           goal: state.goal, level: state.level, language: state.lang,
         });
-        save({ ...user, interests: backendGenres, genres: backendGenres, goal: state.goal, level: state.level, lang: state.lang, onboarded: true, persisted: true });
-        localStorage.setItem("onboarding.other", "");
       } catch (err) {
-        alert(err.message || "Could not save preferences"); return;
+        btn.disabled = false; btn.textContent = "Save & open my shelf";
+        alert(err.message || "Could not save preferences — please try again.");
+        return;
       }
+      // server confirmed the save: mirror the confirmed values locally only now
+      localStorage.setItem("pustakamitra.profile.v1", JSON.stringify({
+        id: user.id, name: user.name, email: user.email,
+        interests: backendGenres, genres: backendGenres,
+        goal: state.goal, level: state.level, lang: state.lang,
+        saved: [], onboarded: true, persisted: true,
+      }));
+      btn.textContent = "✓ Saved";
       window.location.href = "/pages/discover.html";
       return;
     }
