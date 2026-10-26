@@ -223,7 +223,7 @@ def _self_doc(user: dict) -> dict:
         "phone": user["phone"], "age": user["age"], "dob": user["dob"],
         "gender": user["gender"], "home_address": user.get("home_address"),
         "pin_code": user.get("pin_code"),
-        "interests": user["interests"], "other_interest": user.get("other_interest"),
+        "interests": user.get("interests", []), "other_interest": user.get("other_interest"),
         "goal": user.get("goal"), "level": user.get("level"), "language": user.get("language"),
         "created_at": user["created_at"].isoformat(),
         "updated_at": user["updated_at"].isoformat(),
