@@ -61,13 +61,22 @@ img { max-width: 100%; }
 .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-2); }
 
 /* forms */
-input[type="text"], input[type="email"], input[type="password"], input[type="search"], select, textarea {
-  width: 100%; padding: .7rem .9rem; border: var(--border); border-radius: var(--radius);
-  background: #fffdf8; font: 1rem var(--sans); color: var(--ink);
+input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+input[type="password"], input[type="search"], input[type="date"], select {
+  width: 100%; min-height: 44px; height: 44px; padding: 0 .75rem;
+  border: var(--border); border-radius: var(--radius);
+  background: #fffdf8; font: 0.95rem var(--sans); color: var(--ink);
 }
+textarea {
+  width: 100%; padding: .6rem .75rem; border: var(--border); border-radius: var(--radius);
+  background: #fffdf8; font: 0.95rem/1.5 var(--sans); color: var(--ink);
+}
+input[type="date"] { height: 44px; min-height: 44px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible,
 input:focus, select:focus, textarea:focus { outline: 2px solid rgba(194,135,29,.45); outline-offset: 1px; border-color: var(--green); }
-.field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: var(--space-3); }
-.field label { font-weight: 600; font-size: .9rem; color: var(--green-700); }
+.field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 22px; }  /* 20–24px between field groups */
+.field label { font-weight: 600; font-size: .88rem; line-height: 1.3; color: var(--green-700); margin-bottom: 0; }
+.field .hint { margin: 0; line-height: 1.35; }
 .hint { font-size: .8rem; color: var(--mute); }
 
 .searchbar { display: flex; gap: .5rem; }
@@ -85,7 +94,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid rgba(194,135,29,.
 .chip[aria-pressed="true"] .kn { color: var(--gold-soft); }
 
 /* panels */
-.panel { border: var(--border); border-radius: var(--radius-lg); background: #fffdf8; padding: var(--space-3); }
+.panel { border: var(--border); border-radius: var(--radius-lg); background: #fffdf8; padding: 28px; }
 .panel.green { background: var(--green); color: var(--ivory); border-color: var(--green); }
 .panel.soft { background: var(--ivory-200); }
 
@@ -112,7 +121,25 @@ footer a { color: var(--green-700); }
 .split .left blockquote { font-family: var(--serif); font-size: 1.4rem; line-height: 1.5; }
 .split .left .by { color: var(--gold-soft); font-size: .9rem; }
 .split .right { display: grid; place-items: center; padding: var(--space-4); }
-.authcard { width: 100%; max-width: 400px; }
+.authcard { width: 100%; max-width: 640px; margin: 0 auto; }
+/* registration card: centered, 640px max */
+.split .right > form { width: 100%; max-width: 640px; margin: 0 auto; }
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { padding-right: 70px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: none; background: none; cursor: pointer; font: 600 .78rem var(--sans);
+  color: var(--green); padding: .25rem .5rem; border-radius: var(--radius);
+}
+.pw-toggle:hover { background: var(--ivory-200); }
+
+/* two-column row: desktop only */
+@media (min-width: 641px) {
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+@media (max-width: 850px) {
+  .split .right { padding: 1.25rem 16px; }
+}
 .steps { display: flex; gap: .4rem; margin-bottom: var(--space-3); }
 .steps .dot { height: 6px; flex: 1; border-radius: 999px; background: var(--ivory-400); }
 .steps .dot.done { background: var(--gold); }
@@ -120,9 +147,13 @@ footer a { color: var(--green-700); }
 
 @media (max-width: 850px) {
   .split { grid-template-columns: 1fr; }
-  .split .left { min-height: 220px; padding: var(--space-3); }
+  .split .left { height: auto !important; position: static !important; min-height: 0; padding: 20px; margin-bottom: 16px; }
 }
 @media (max-width: 640px) {
+  .panel { padding: 20px; }
+  .container { padding-inline: 16px; }
+  .split { grid-template-columns: 1fr; }
+  .split .left { min-height: 200px; padding: 20px; }
   .topnav .links a:not(.btn) { display: none; }
   h1 { font-size: 2rem; }
 }

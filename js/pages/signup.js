@@ -18,14 +18,14 @@ const accountSection = `
   ${field("name", "Full name*", txt("name", 'required minlength="2" maxlength="80"'))}
   ${field("email", "Email address*", txt("email", 'required type="email"'), "Will be the sign-in ID (stored lowercase).")}
   ${field("phone", "Phone number*", txt("phone", 'required'), 'With country code — India (+91) default, e.g. "+91 98765 43210".')}
-  ${field("password", "Password*", txt("password", 'required type="password" minlength="8"'), "Minimum 8 characters.")}
-  ${field("password_confirm", "Confirm password*", txt("password_confirm", 'required type="password"'))}
+  ${field("password", "Password*", `<span class="pw-wrap">${txt("password", 'required type="password" minlength="8"')}<button type="button" class="pw-toggle" data-toggle="password" aria-label="Show password">Show</button></span>`, "Minimum 8 characters.")}
+  ${field("password_confirm", "Confirm password*", `<span class="pw-wrap">${txt("password_confirm", 'required type="password"')}<button type="button" class="pw-toggle" data-toggle="password_confirm" aria-label="Show password">Show</button></span>`)}
 </div>
 <div class="panel" style="margin-top:1rem">
   <b>Personal Details</b> <span class="hint">— optional, private to you</span>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+  <div class="row-2">
     ${field("age", "Age*", txt("age", 'required type="number" min="5" max="120"'))}
-    ${field("dob", "Date of birth", txt("dob", 'type="date"'), "Optional; must agree with age. No future dates.")}
+    ${field("dob", "Date of birth", txt("dob", 'type="date"'), "Optional; must match age. No future dates.")}
   </div>
   ${field("gender", "Gender", `<select id="gender">
       <option value="prefer-not-to-say">Prefer not to say</option>
@@ -111,6 +111,15 @@ function wire() {
   main.querySelectorAll("[data-g]").forEach((c) => c.addEventListener("click", () => {
     picks.has(c.dataset.g) ? picks.delete(c.dataset.g) : picks.add(c.dataset.g);
     c.setAttribute("aria-pressed", picks.has(c.dataset.g));
+  }));
+
+  // password show/hide
+  main.querySelectorAll(".pw-toggle").forEach((t) => t.addEventListener("click", () => {
+    const input = main.querySelector("#" + t.dataset.toggle);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    t.textContent = show ? "Hide" : "Show";
+    t.setAttribute("aria-label", show ? "Hide password" : "Show password");
   }));
 
   main.querySelector("#regform").addEventListener("submit", async (e) => {
