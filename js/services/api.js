@@ -70,8 +70,35 @@ export const recommendationService = {
 };
 
 export const libraryService = {
-  // Holdings are NOT verified by any integrated source. We return the honest
-  // "not verified" state instead of fabricating branches or availability.
+  async search({ q = "", area = "", pincode = "", category = "", has_phone = null, page = 1, page_size = 20 } = {}) {
+    const p = new URLSearchParams();
+    if (q.trim()) p.set("q", q.trim());
+    if (area.trim()) p.set("area", area.trim());
+    if (pincode.trim()) p.set("pincode", pincode.trim());
+    if (category.trim()) p.set("category", category.trim());
+    if (has_phone !== null) p.set("has_phone", has_phone);
+    p.set("page", page);
+    p.set("page_size", page_size);
+    return call(`/api/libraries?${p}`);
+  },
+  async nearby({ lat, lon, radius_km = 5.0, q = "", category = "", page = 1, page_size = 20 } = {}) {
+    const p = new URLSearchParams();
+    p.set("lat", lat);
+    p.set("lon", lon);
+    p.set("radius_km", radius_km);
+    if (q.trim()) p.set("q", q.trim());
+    if (category.trim()) p.set("category", category.trim());
+    p.set("page", page);
+    p.set("page_size", page_size);
+    return call(`/api/libraries/nearby?${p}`);
+  },
+  async getLibrary(id) {
+    try {
+      return await call(`/api/libraries/${encodeURIComponent(id)}`);
+    } catch (e) {
+      return e.status === 404 ? null : Promise.reject(e);
+    }
+  },
   async notVerified() { return { verified: false }; },
 };
 

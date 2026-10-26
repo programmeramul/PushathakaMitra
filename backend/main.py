@@ -24,7 +24,7 @@ from collections import Counter
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import uvicorn
 from argon2 import PasswordHasher
@@ -36,12 +36,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from pymongo import MongoClient, errors
 
-# backend/.env is loaded explicitly (next to main.py) so startup works from any
-# cwd. Real environment variables always win (override=False) — shell/CI settings
-# are never silently replaced by file values.
+# backend/.env is loaded explicitly using a reliable path independent of CWD.
+# Under live execution, override=True ensures updated keys in .env supersede stale shell variables.
+# Under pytest, override=False respects test isolation defined by conftest.py.
+import sys
 from pathlib import Path as _Path
 from dotenv import load_dotenv as _load_dotenv
-_load_dotenv(_Path(__file__).with_name(".env"), override=False)
+
+_backend_env = _Path(__file__).resolve().parent / ".env"
+_root_env = _Path(__file__).resolve().parent.parent / ".env"
+_is_pytest = "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST") is not None
+
+if _backend_env.is_file():
+    _load_dotenv(_backend_env, override=not _is_pytest)
+elif _root_env.is_file():
+    _load_dotenv(_root_env, override=not _is_pytest)
 
 SESSION_COOKIE = "pm_session"
 SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "180"))
@@ -49,7 +58,15 @@ SESSION_HASH_KEY = os.environ.get("SESSION_HASH_KEY", "dev-only-session-key")
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.environ.get("MONGO_DB", "pustakamitra")  # tests override to pustakamitra_test
 SECURE_COOKIES = os.environ.get("SECURE_COOKIES") == "1"
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = (os.environ.get("GROQ_MODEL") or "qwen/qwen3.8-27b").strip()
+
+
+def _get_groq_config():
+    """Safely return sanitized (key, model) stripped of whitespace without leaking secrets."""
+    key = (os.environ.get("GROQ_API_KEY") or "").strip()
+    model = (GROQ_MODEL or os.environ.get("GROQ_MODEL") or "qwen/qwen3.8-27b").strip()
+    return key, model
+
 
 ph = PasswordHasher()
 
@@ -65,6 +82,11 @@ def _ensure_indexes() -> None:
     # TTL index: Mongo autoremoves expired session docs
     sessions.create_index([("expires_at", 1)], name="ttl_sessions",
                           expireAfterSeconds=0)
+    libraries_coll = DB.libraries
+    libraries_coll.create_index([("library_id", 1)], unique=True, name="uq_library_id")
+    libraries_coll.create_index([("name", "text"), ("area", "text"), ("address", "text")], name="tx_library_search")
+    libraries_coll.create_index([("area", 1)], name="ix_area")
+    libraries_coll.create_index([("location", "2dsphere")], name="geo_location")
 
 
 _ensure_indexes()
@@ -380,7 +402,156 @@ def update_me(data: ProfileIn, user: dict = Depends(_current_user)):
 books_coll = DB["books"]
 books_coll.create_index("source_id", unique=True)
 
+libraries_coll = DB["libraries"]
+
 SYNC_TOKEN = os.environ.get("CATALOG_SYNC_TOKEN")
+
+
+def _pub_library(lib: dict, distance_km: Optional[float] = None) -> dict:
+    """Public library shape — real fields from uploaded dataset, no fake holdings."""
+    lat = lib.get("latitude")
+    lon = lib.get("longitude")
+    directions_url = None
+    if lat is not None and lon is not None:
+        directions_url = f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
+    res = {
+        "library_id": lib.get("library_id") or str(lib.get("_id")),
+        "name": lib.get("name") or "",
+        "category": lib.get("category"),
+        "branch": lib.get("branch"),
+        "address": lib.get("address"),
+        "area": lib.get("area"),
+        "pincode": lib.get("pincode"),
+        "phone": lib.get("phone"),
+        "latitude": lat,
+        "longitude": lon,
+        "location": lib.get("location"),
+        "source": lib.get("source"),
+        "source_file": lib.get("source_file"),
+        "verification_status": lib.get("verification_status") or "verified_location",
+        "directions_url": directions_url,
+    }
+    if distance_km is not None:
+        res["distance_km"] = round(distance_km, 2)
+    return res
+
+
+@app.get("/api/libraries")
+def search_libraries(
+    q: str = "",
+    area: str = "",
+    pincode: str = "",
+    category: str = "",
+    has_phone: Optional[bool] = None,
+    page: int = 1,
+    page_size: int = 20,
+):
+    if page < 1:
+        raise _fail(422, "page_invalid", "Page must be >= 1")
+    page_size = max(1, min(100, page_size))
+
+    query: dict = {}
+    if q.strip():
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        query["$or"] = [{"name": rx}, {"address": rx}, {"area": rx}, {"branch": rx}]
+    if area.strip():
+        query["area"] = {"$regex": re.escape(area.strip()), "$options": "i"}
+    if pincode.strip():
+        query["pincode"] = pincode.strip()
+    if category.strip():
+        query["category"] = {"$regex": re.escape(category.strip()), "$options": "i"}
+    if has_phone is True:
+        query["phone"] = {"$ne": None}
+    elif has_phone is False:
+        query["phone"] = None
+
+    total = libraries_coll.count_documents(query)
+    skip = (page - 1) * page_size
+    docs = list(libraries_coll.find(query).skip(skip).limit(page_size))
+    items = [_pub_library(d) for d in docs]
+    import math
+    pages = math.ceil(total / page_size) if total else 1
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+    }
+
+
+@app.get("/api/libraries/nearby")
+def nearby_libraries(
+    lat: float,
+    lon: float,
+    radius_km: float = 5.0,
+    q: str = "",
+    category: str = "",
+    page: int = 1,
+    page_size: int = 20,
+):
+    if not (-90.0 <= lat <= 90.0):
+        raise _fail(422, "lat_invalid", "Latitude must be between -90 and 90")
+    if not (-180.0 <= lon <= 180.0):
+        raise _fail(422, "lon_invalid", "Longitude must be between -180 and 180")
+    if radius_km <= 0 or radius_km > 50.0:
+        raise _fail(422, "radius_invalid", "Radius must be between 0.1 and 50 km")
+    if page < 1:
+        raise _fail(422, "page_invalid", "Page must be >= 1")
+    page_size = max(1, min(100, page_size))
+
+    geo_near = {
+        "near": {"type": "Point", "coordinates": [lon, lat]},
+        "distanceField": "distance_meters",
+        "maxDistance": radius_km * 1000.0,
+        "spherical": True,
+    }
+    match_stage: dict = {}
+    if q.strip():
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        match_stage["$or"] = [{"name": rx}, {"address": rx}, {"area": rx}, {"branch": rx}]
+    if category.strip():
+        match_stage["category"] = {"$regex": re.escape(category.strip()), "$options": "i"}
+
+    pipeline = [{"$geoNear": geo_near}]
+    if match_stage:
+        pipeline.append({"$match": match_stage})
+
+    count_pipeline = list(pipeline) + [{"$count": "total"}]
+    count_res = list(libraries_coll.aggregate(count_pipeline))
+    total = count_res[0]["total"] if count_res else 0
+
+    skip = (page - 1) * page_size
+    pipeline.append({"$skip": skip})
+    pipeline.append({"$limit": page_size})
+
+    docs = list(libraries_coll.aggregate(pipeline))
+    items = []
+    for d in docs:
+        dist_km = d.get("distance_meters", 0.0) / 1000.0
+        items.append(_pub_library(d, distance_km=dist_km))
+
+    import math
+    pages = math.ceil(total / page_size) if total else 1
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "pages": pages,
+        "radius_km": radius_km,
+        "center": {"lat": lat, "lon": lon},
+    }
+
+
+@app.get("/api/libraries/{library_id}")
+def get_library(library_id: str):
+    doc = libraries_coll.find_one({"$or": [{"library_id": library_id}, {"_id": library_id}]})
+    if not doc and ObjectId.is_valid(library_id):
+        doc = libraries_coll.find_one({"_id": ObjectId(library_id)})
+    if not doc:
+        raise _fail(404, "library_not_found", "Library not found in uploaded dataset")
+    return _pub_library(doc)
 
 
 def _pub_book(b: dict) -> dict:
@@ -492,6 +663,10 @@ def _classify_groq_failure(e: Exception) -> str:
             return "invalid_credentials"
         if e.code == 404:
             return "model_unavailable"
+        if e.code == 400:
+            if any(term in detail.lower() for term in ("model", "not_found", "decommissioned")):
+                return "model_unavailable"
+            return "malformed_response"
         if e.code == 429:
             return "rate_limited"
         return "network"
@@ -525,14 +700,14 @@ def _keyword_rank(cands: list, interests: list, limit: int = 6) -> list:
 
 def _groq_rank(cands: list, interests: list) -> Optional[list]:
     """Ask Groq to pick from candidates. Returns None on any failure."""
-    key = os.environ.get("GROQ_API_KEY")
+    key, model = _get_groq_config()
     if not key:
         return None    # only titles/authors/categories go out — never the user's PII
     payload_cands = [{"id": str(b["_id"]), "title": b["title"],
                       "authors": b.get("authors") or [], "year": b.get("year"),
                       "categories": b.get("subject_slugs") or []} for b in cands]
     body = json.dumps({
-        "model": GROQ_MODEL,
+        "model": model,
         "messages": [
             {"role": "system", "content":
              "You recommend books for a reader. From the given candidates ONLY, "
@@ -589,6 +764,9 @@ class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=600)
     history: List[dict] = Field(default_factory=list, max_length=10)
     locality: Optional[str] = Field(default=None, max_length=80)
+    latitude: Optional[float] = Field(default=None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(default=None, ge=-180.0, le=180.0)
+    radius_km: Optional[float] = Field(default=None, gt=0, le=50.0)
 
 
 _KN_HINTS = ("ಕನ್ನಡ", "ಓದು", "ಪುಸ್ತಕ")          # generic Kannada words (language only via _KANNADA_RE)
@@ -659,7 +837,7 @@ def _parse_slots(msg: str, user_id: str, interests: list) -> dict:
     if _GREET_RE.match(msg):
         s["mode"] = "greet"
         return s
-    if any(h in msg for h in _LIBRARY_HINTS):
+    if any(h in m for h in _LIBRARY_HINTS):
         s["mode"] = "library"
         return s
     if _KANNADA_RE.search(msg):
@@ -838,7 +1016,7 @@ def _candidates_for(message: str, interests: list) -> list:
 def _groq_chat(cands: list, interests: list, message: str, history: list, slots=None):
     """Groq chat turn over candidates. Returns ({message, recs}|None, reason|None);
     reason is a safe code from _GROQ_REASONS when result is None."""
-    key = os.environ.get("GROQ_API_KEY")
+    key, model = _get_groq_config()
     if not key:
         return None, "config_missing"
     if not cands:
@@ -850,7 +1028,7 @@ def _groq_chat(cands: list, interests: list, message: str, history: list, slots=
          "language": b.get("language")}
         for b in cands[:30]]}
     body = json.dumps({
-        "model": GROQ_MODEL, "temperature": 0.4, "max_tokens": 500,
+        "model": model, "temperature": 0.4, "max_tokens": 500,
         "response_format": {"type": "json_object"},
         "messages": [
             {"role": "system", "content":
@@ -893,11 +1071,146 @@ def _groq_chat(cands: list, interests: list, message: str, history: list, slots=
 _PIN_RE = re.compile(r"\b([1-9][0-9]{5})\b")
 _NEAR_RE = re.compile(r"(?:near|in|around|list|available)\s+([A-Za-z][A-Za-z .]{2,40}?)(?:\s*[?.!]|$|\s+library|\s+public)", re.I)
 
+KNOWN_AREAS = [
+    "Koramangala", "Indiranagar", "Jayanagar", "Basavanagudi", "Basavagudi",
+    "Malleswaram", "Malleshwaram", "Vijayanagar", "Vijaynagar", "BTM Layout", "BTM",
+    "HSR Layout", "HSR", "Whitefield", "Peenya", "Yelahanka", "Cottonpet",
+    "Lakkasandra", "Magadi Road", "Cubbon Park", "Dasarahalli", "Kumbalagodu",
+    "Dayanand Nagar", "Kengeri", "N R Colony", "Vinayaka Layout", "J K Puram",
+    "Gayatri Nagar", "Hampinagar", "R.T. Nagar", "RT Nagar", "Anekal",
+    "Attibele", "Chandapura", "Sarjapur", "Bommasandra", "Hebbagodi",
+    "Sahakarnagar", "JP Nagar", "Vijaya Bank Layout", "Parangipalya",
+    "Saraswathipuram", "Double Road", "Sampige Road", "South End",
+]
+
+
+def _search_libraries_for_chat(
+    msg: str,
+    locality: Optional[str] = None,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    radius_km: Optional[float] = None,
+) -> Tuple[List[dict], str]:
+    m = msg.lower()
+
+    # 1. Holdings question check
+    if re.search(r"list this book|holdings|shelf availability|is this book|have this book|own this book|borrow this book", m):
+        reply = (
+            "PustakaMitra AI has verified library locations and contacts from the uploaded Bengaluru dataset, "
+            "but individual book holdings and shelf borrowing availability have not been verified. "
+            "You can search the official state catalogue on e-Granthalaya or WorldCat for specific title holdings."
+        )
+        return [], reply
+
+    # 2. Check for explicit radius in message (e.g. "within 3 km")
+    rad_match = re.search(r"(?:within|under|around)\s+(\d+(?:\.\d+)?)\s*km", m)
+    if rad_match:
+        radius_km = float(rad_match.group(1))
+    radius = radius_km or 5.0
+
+    # 3. Nearby query with coordinates
+    if lat is not None and lon is not None:
+        pipeline = [
+            {
+                "$geoNear": {
+                    "near": {"type": "Point", "coordinates": [lon, lat]},
+                    "distanceField": "distance_meters",
+                    "maxDistance": radius * 1000.0,
+                    "spherical": True,
+                }
+            },
+            {"$limit": 8},
+        ]
+        docs = list(libraries_coll.aggregate(pipeline))
+        items = [_pub_library(d, distance_km=d["distance_meters"] / 1000.0) for d in docs]
+        if items:
+            reply = f"Found {len(items)} public libraries near your location within {radius} km (ordered by distance):"
+        else:
+            reply = f"No libraries found within {radius} km of your location in the uploaded dataset."
+        return items, reply
+
+    # 4. Proximity requested but no coordinates and no locality provided
+    is_proximity = bool(re.search(r"\b(?:closest|nearest|near me|my location|close to me)\b", m))
+
+    # 5. Extract locality / PIN from locality param or message
+    target_area = (locality or "").strip()
+    if not target_area:
+        for area in KNOWN_AREAS:
+            if re.search(r"\b" + re.escape(area) + r"\b", msg, re.I):
+                target_area = area
+                break
+    if not target_area:
+        near_m = _NEAR_RE.search(msg)
+        if near_m:
+            target_area = near_m.group(1).strip()
+    pin_m = _PIN_RE.search(msg)
+    target_pin = pin_m.group(1) if pin_m else None
+
+    # If asking for closest/near me without coordinates or locality:
+    if is_proximity and not target_area and not target_pin:
+        reply = (
+            "To find the closest library, click 'Use My Location' or share your locality/PIN code "
+            "(e.g., 'Indiranagar', 'Jayanagar', or '560011')."
+        )
+        return [], reply
+
+    # 6. Filters for telephone, category, specific name
+    query: dict = {}
+
+    if re.search(r"\b(?:phone|telephone|contact|number|numbers)\b", m):
+        query["phone"] = {"$ne": None}
+
+    if re.search(r"\bgovernment\b", m):
+        query["category"] = {"$regex": "government", "$options": "i"}
+    elif re.search(r"\bprivate(?:ly)?\b", m):
+        query["category"] = {"$regex": "private", "$options": "i"}
+
+    if "state central library" in m:
+        query["name"] = {"$regex": "State Central Library", "$options": "i"}
+    elif target_area or target_pin:
+        area_terms = []
+        if target_area:
+            rx = {"$regex": re.escape(target_area), "$options": "i"}
+            area_terms.extend([{"area": rx}, {"name": rx}, {"address": rx}])
+        if target_pin:
+            area_terms.append({"pincode": target_pin})
+            area_terms.append({"address": {"$regex": re.escape(target_pin)}})
+        if area_terms:
+            query["$or"] = area_terms
+
+    if not query:
+        query = {"location": {"$ne": None}}
+
+    docs = list(libraries_coll.find(query).limit(8))
+    items = [_pub_library(d) for d in docs]
+
+    if items:
+        if "state central library" in m:
+            reply = f"Found '{items[0]['name']}' in the uploaded Bengaluru dataset:"
+        elif query.get("phone"):
+            reply = f"Found {len(items)} libraries with telephone numbers in the uploaded dataset:"
+        elif target_area:
+            reply = f"Found {len(items)} libraries in or near {target_area} from the uploaded dataset:"
+        elif target_pin:
+            reply = f"Found {len(items)} libraries near PIN code {target_pin} from the uploaded dataset:"
+        elif query.get("category"):
+            reply = f"Found {len(items)} matching libraries in the uploaded dataset:"
+        else:
+            reply = f"Here are public libraries in Bengaluru from the uploaded dataset:"
+    else:
+        searched_for = target_area or target_pin or msg
+        reply = (
+            f"I couldn't find any libraries matching '{searched_for}' in the uploaded Bengaluru dataset. "
+            "Try searching for a prominent area like Jayanagar, Malleswaram, Cubbon Park, or Koramangala."
+        )
+
+    return items, reply
+
 
 def _library_links(message: str, locality: Optional[str]) -> dict:
-    """Bengaluru library discovery: NO real location dataset exists (Mongo has no
-    libraries collection), so we return official search links only and never
-    claim verified addresses/holdings. Locality/PIN is parsed deterministically."""
+    """Bengaluru library discovery: links to official search portals.
+    Location dataset is imported into libraries collection, but book shelf
+    holdings and live borrowing availability are unverified."""
     loc_named = (locality or "").strip()
     if not loc_named:
         m = _NEAR_RE.search(message)
@@ -950,10 +1263,28 @@ def chat(data: ChatIn, user: dict = Depends(_current_user)):
                 "books": [], "library": None}
 
     if s["mode"] == "library":
-        return {"engine": "links", "reply":
-                "I can point you to official library search pages — I don't "
-                "have verified Bengaluru holdings data yet.",
-                "books": [], "library": _library_links(msg, data.locality)}
+        lib_results, reply_text = _search_libraries_for_chat(
+            msg=msg,
+            locality=data.locality,
+            lat=data.latitude,
+            lon=data.longitude,
+            radius_km=data.radius_km,
+        )
+        return {
+            "engine": "library_search",
+            "reply": reply_text,
+            "books": [],
+            "library": {
+                "verified": True,
+                "note": "Integrated Bengaluru library dataset.",
+                "links": [
+                    {"label": "City Central Library — State Library Directory", "url": "https://karnataka.gov.in/newpage/Public%20Libraries.aspx"},
+                    {"label": "e-Granthalaya catalogue", "url": "https://egranthalaya.nic.in/"},
+                ],
+                "holdings": {"available": False, "note": "Holdings unverified."}
+            },
+            "libraries": lib_results,
+        }
 
     cands, note = _find_candidates(s, interests)
 
@@ -1022,9 +1353,18 @@ def chat(data: ChatIn, user: dict = Depends(_current_user)):
 @app.get("/api/chat/status")
 def chat_status():
     """Frontend can probe availability without calling Groq."""
-    return {"groq_configured": bool(os.environ.get("GROQ_API_KEY")),
-            "model": GROQ_MODEL, "library_dataset_imported": False}
+    key, model = _get_groq_config()
+    lib_count = libraries_coll.count_documents({})
+    return {
+        "groq_configured": bool(key),
+        "model": model,
+        "library_dataset_imported": lib_count > 0,
+        "library_count": lib_count,
+    }
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8001)
+    backend_dir = str(_Path(__file__).resolve().parent)
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+    uvicorn.run("main:app", host="127.0.0.1", port=8001, app_dir=backend_dir)

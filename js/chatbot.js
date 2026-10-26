@@ -9,12 +9,12 @@ const API = "http://127.0.0.1:8001";
 const MAX_RETRIES = 2;                      // per in-flight message
 
 const CHIPS = [
-  "Find my next book",
-  "Recommend Kannada books",
-  "Explore my interests",
   "Find libraries in Bengaluru",
-  "Find books about business",
-  "Recommend a book for a beginner",
+  "Show libraries in Jayanagar",
+  "Find libraries near Indiranagar",
+  "Libraries with telephone numbers",
+  "Recommend Kannada books",
+  "Find my next book",
 ];
 
 // model/user text is ALWAYS rendered via textContent — model output never
@@ -60,6 +60,75 @@ function bookCard(b) {
 }
 
 function escUrl(u) { return String(u || "").replace(/"/g, "%22"); }
+
+function libraryCard(lib) {
+  const card = document.createElement("div");
+  card.className = "chatlib-card";
+  card.style.cssText = "margin: .5rem 0; padding: .65rem .85rem; border: 1px solid var(--cream-line, #e2dac9); border-radius: 8px; background: #fff; font-size: .88rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);";
+
+  const header = document.createElement("div");
+  header.style.cssText = "display: flex; justify-content: space-between; align-items: baseline; gap: .5rem;";
+
+  const name = document.createElement("b");
+  name.style.cssText = "color: var(--green-700, #1b382b); font-size: .95rem;";
+  name.textContent = lib.name || "Library";
+  header.appendChild(name);
+
+  if (lib.category) {
+    const cat = document.createElement("span");
+    cat.style.cssText = "font-size: .75rem; color: #555; background: #f3efe6; padding: 2px 6px; border-radius: 4px; white-space: nowrap;";
+    cat.textContent = lib.category;
+    header.appendChild(cat);
+  }
+  card.appendChild(header);
+
+  if (lib.address) {
+    const addr = document.createElement("div");
+    addr.style.cssText = "color: #444; margin-top: .3rem; font-size: .82rem; line-height: 1.3;";
+    addr.textContent = lib.address;
+    card.appendChild(addr);
+  }
+
+  const metaRow = document.createElement("div");
+  metaRow.style.cssText = "display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .4rem; align-items: center; font-size: .8rem;";
+
+  if (lib.distance_km !== undefined && lib.distance_km !== null) {
+    const dist = document.createElement("span");
+    dist.style.cssText = "color: var(--green-700, #1b382b); font-weight: 600;";
+    dist.textContent = `📍 ${lib.distance_km} km away`;
+    metaRow.appendChild(dist);
+  }
+
+  if (lib.phone) {
+    const phone = document.createElement("span");
+    phone.style.cssText = "color: #333;";
+    phone.textContent = `📞 ${lib.phone}`;
+    metaRow.appendChild(phone);
+  }
+
+  if (lib.directions_url) {
+    const dir = document.createElement("a");
+    dir.href = escUrl(lib.directions_url);
+    dir.target = "_blank";
+    dir.rel = "noopener noreferrer";
+    dir.style.cssText = "color: var(--green-700, #1b382b); font-weight: 600; text-decoration: underline;";
+    dir.textContent = "Get Directions ↗";
+    metaRow.appendChild(dir);
+  }
+
+  card.appendChild(metaRow);
+  return card;
+}
+
+function locationPromptButton(onClick) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "chip chat-chip";
+  btn.style.cssText = "display: inline-flex; align-items: center; gap: 4px; margin-top: .5rem; background: var(--green-700, #1b382b); color: #fff; cursor: pointer;";
+  btn.textContent = "📍 Share My Location";
+  btn.addEventListener("click", onClick);
+  return btn;
+}
 
 function linksBox(lib) {
   const w = document.createElement("div");
@@ -178,7 +247,7 @@ async function initChatbot(interests = []) {
     log.appendChild(wrap); log.scrollTop = log.scrollHeight;
   }
 
-  async function send(isRetry = false) {
+  async function send(isRetry = false, userLocation = null) {
     const msg = isRetry ? state.lastMsg : input.value.trim();
     if (!msg || state.busy) return;
     setBusy(true);
@@ -194,6 +263,10 @@ async function initChatbot(interests = []) {
 
     try {
       const body = { message: msg, history: state.history.filter(h => h.role !== "status").slice(-10) };
+      if (userLocation && typeof userLocation.lat === "number" && typeof userLocation.lon === "number") {
+        body.latitude = userLocation.lat;
+        body.longitude = userLocation.lon;
+      }
       const res = await fetch(API + "/api/chat", {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -206,11 +279,31 @@ async function initChatbot(interests = []) {
       }
       rmLoading();
       log.appendChild(bubble("bot", d.reply || ""));
-      if (d.engine && d.engine !== "groq")
+      if (d.engine && d.engine !== "groq" && d.engine !== "library_search")
         log.appendChild(statusNote("Using catalogue-based recommendations" +
           (d.fallback_reason ? ` (${d.fallback_reason})` : "")));
       (d.books || []).slice(0, 5).forEach((b) => { log.appendChild(bookCard(b)); });
-      if (d.library) log.appendChild(linksBox(d.library));
+      (d.libraries || []).forEach((l) => { log.appendChild(libraryCard(l)); });
+      if (d.library && (!d.libraries || !d.libraries.length)) log.appendChild(linksBox(d.library));
+      if (d.reply && d.reply.includes("Use My Location")) {
+        log.appendChild(locationPromptButton(() => {
+          if (!navigator.geolocation) {
+            log.appendChild(bubble("bot", "Geolocation is not supported by your browser. Please type your locality or PIN code."));
+            return;
+          }
+          log.appendChild(bubble("system", "Requesting browser location permission…"));
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              input.value = "Find libraries closest to my location";
+              send(false, { lat: pos.coords.latitude, lon: pos.coords.longitude });
+            },
+            () => {
+              log.appendChild(bubble("bot", "Location permission was denied or unavailable. Please enter your locality or PIN code instead."));
+            },
+            { timeout: 10000 }
+          );
+        }));
+      }
       state.history.push({ role: "bot", content: d.reply || "" });
       state.retries = 0; state.lastMsg = "";
       sessionStorage.setItem(STORE_KEY, JSON.stringify(state.history.filter(h => h.role !== "status").slice(-20)));
