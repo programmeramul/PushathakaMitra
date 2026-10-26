@@ -192,11 +192,11 @@ footer a { color: var(--green-700); }
   transition: transform .12s ease; }
 .chat-fab:hover { transform: translateY(-2px); }
 .chat-panel { position: fixed; right: 18px; bottom: 80px; z-index: 60; width: min(380px, calc(100vw - 2rem));
-  max-height: min(560px, calc(100dvh - 110px)); display: flex; flex-direction: column;
+  height: min(560px, calc(100dvh - 110px)); display: flex; flex-direction: column;
   background: var(--ivory); border: var(--border); border-radius: var(--radius-lg);
   box-shadow: 0 10px 30px rgba(27,67,50,.18); overflow: hidden; }
 .chat-panel[hidden] { display: none; }
-.chat-panel > header { display: flex; align-items: center; gap: 10px; padding: .7rem .9rem;
+.chat-panel > header { flex: none; display: flex; align-items: center; gap: 10px; padding: .7rem .9rem;
   background: var(--ivory-200); border-bottom: var(--border); }
 .chat-panel > header b { font-family: var(--serif); color: var(--green); display: block; line-height: 1.2; }
 .chat-panel > header small { color: var(--mute); }
@@ -204,26 +204,35 @@ footer a { color: var(--green-700); }
   color: var(--green); cursor: pointer; padding: .3rem; }
 .chat-panel > header button:focus-visible, .chat-fab:focus-visible, .chat-chip:focus-visible,
 .chatform input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.chatlog { overflow-y: auto; padding: .9rem; display: flex; flex-direction: column; gap: .6rem; flex: 1; }
+/* scroll region needs min-height:0 inside a fixed-height flex column, or long
+   conversations push the chips/form out of the panel (the overlap bug) */
+.chatlog { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: .9rem; display: flex; flex-direction: column; gap: .6rem; }
 .chatmsg { max-width: 88%; padding: .55rem .8rem; border-radius: 12px; font-size: .92rem; }
 .chatmsg.bot { background: var(--ivory-200); color: var(--ink); align-self: flex-start; }
 .chatmsg.user { background: var(--green); color: var(--ivory); align-self: flex-end; }
 .chatmsg.system { background: none; color: var(--mute); font-size: .78rem; align-self: center; text-align: center; }
 .chatmsg p { margin: 0; overflow-wrap: anywhere; }
+.chaterr { align-self: center; text-align: center; font-size: .8rem; color: #b3541e;
+  display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+.chaterr p { margin: 0; }
 .chatbook, .chatbookline { display: flex; gap: .6rem; align-items: center; background: #fff;
   border: var(--border); border-radius: 10px; padding: .5rem .7rem; align-self: flex-start; max-width: 95%; }
 .chatbook img { width: 44px; height: 60px; object-fit: cover; border-radius: 3px; flex: none; }
 .chatbook b { font-family: var(--serif); color: var(--green); display: block; font-size: .95rem; }
 .chatbook small { display: block; color: var(--mute); }
 .chatbook .chatreason { color: var(--green-700); }
-.chatchips { display: flex; flex-wrap: wrap; gap: .35rem; padding: 0 .9rem .5rem; }
+.chatchips { flex: none; display: flex; flex-wrap: wrap; gap: .35rem; padding: 0 .9rem .5rem;
+  border-top: 1px dashed var(--gold); padding-top: .5rem; }
 .chat-chip { font-size: .78rem; padding: .3rem .6rem; }
-.chatform { display: flex; gap: .5rem; padding: .7rem .9rem; border-top: var(--border); }
+.chatform { flex: none; display: flex; gap: .5rem; padding: .7rem .9rem; border-top: var(--border); }
 .chatform input { flex: 1; padding: .55rem .8rem; border: var(--border); border-radius: var(--radius);
   background: #fff; color: var(--ink); font: .95rem var(--sans); min-width: 0; }
 .chatform .btn { flex: none; }
 @media (max-width: 640px) {
-  .chat-panel { right: 10px; bottom: 74px; max-height: calc(100dvh - 100px); }
+  .chat-panel { right: 10px; bottom: 74px; width: calc(100vw - 20px);
+    height: calc(100dvh - 90px); }
   .chat-fab { right: 12px; bottom: 12px; width: 48px; height: 48px; }
+  .chat-chip { font-size: .74rem; }
 }
 @media (prefers-reduced-motion: reduce) { .chat-fab { transition: none; } }

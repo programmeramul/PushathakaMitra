@@ -15,9 +15,12 @@ from environment variables only.
 """
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
+import socket
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
@@ -457,6 +460,52 @@ def catalog_sync(request: Request):
 
 # --------------------------- recommendations ---------------------------
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+# Cloudflare in front of Groq hard-blocks the default "Python-urllib" client
+# (HTTP 403, CF error 1010) — a named UA is required for any production call.
+GROQ_UA = "pustakamitra-backend/0.3"
+
+# sanitized fallback explanations returned to the frontend (never contain the key)
+_GROQ_REASONS = {
+    "config_missing": "AI isn't configured on this server yet.",
+    "invalid_credentials": "The AI service rejected its credentials — the maintainer should check the Groq key.",
+    "rate_limited": "The AI service is rate-limited right now.",
+    "timeout": "The AI service didn't respond in time.",
+    "network": "The AI service could not be reached.",
+    "model_unavailable": "The configured AI model isn't currently available.",
+    "malformed_response": "The AI returned an unexpected response format.",
+    "no_candidates": "The AI had no catalogue books to work from.",
+}
+
+
+def _classify_groq_failure(e: Exception) -> str:
+    """Map a urllib exception to a safe reason code. Logs it without secrets."""
+    if isinstance(e, urllib.error.HTTPError):
+        detail = ""
+        try:
+            detail = e.read().decode()[:200]
+        except Exception:
+            pass
+        logging.getLogger("pustakamitra.groq").warning(
+            "Groq HTTP %s (%s) — detail: %s", e.code, e.reason, detail[:120])
+        if e.code in (401, 403):
+            return "invalid_credentials"
+        if e.code == 404:
+            return "model_unavailable"
+        if e.code == 429:
+            return "rate_limited"
+        return "network"
+    if isinstance(e, TimeoutError):
+        return "timeout"
+    if isinstance(e, socket.timeout):
+        return "timeout"
+    try:
+        raise e                                 # re-raise to see the real type
+    except (urllib.error.URLError, ConnectionError, OSError):
+        return "network"
+    except Exception:
+        logging.getLogger("pustakamitra.groq").warning(
+            "Groq failed: %s: %s", type(e).__name__, str(e)[:200])
+        return "malformed_response"
 
 
 def _keyword_rank(cands: list, interests: list, limit: int = 6) -> list:
@@ -477,8 +526,7 @@ def _groq_rank(cands: list, interests: list) -> Optional[list]:
     """Ask Groq to pick from candidates. Returns None on any failure."""
     key = os.environ.get("GROQ_API_KEY")
     if not key:
-        return None
-    # only titles/authors/categories go out — never the user's PII
+        return None    # only titles/authors/categories go out — never the user's PII
     payload_cands = [{"id": str(b["_id"]), "title": b["title"],
                       "authors": b.get("authors") or [], "year": b.get("year"),
                       "categories": b.get("subject_slugs") or []} for b in cands]
@@ -499,7 +547,8 @@ def _groq_rank(cands: list, interests: list) -> Optional[list]:
         "response_format": {"type": "json_object"},
     }).encode()
     req = urllib.request.Request(GROQ_URL, data=body, headers={
-        "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json",
+        "User-Agent": GROQ_UA})
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
             content = json.load(resp)["choices"][0]["message"]["content"]
@@ -590,11 +639,14 @@ def _candidates_for(message: str, interests: list) -> list:
     return cands
 
 
-def _groq_chat(cands: list, interests: list, message: str, history: list) -> Optional[dict]:
-    """Groq chat turn over candidates. Returns {message, engine:'groq'} or None."""
+def _groq_chat(cands: list, interests: list, message: str, history: list):
+    """Groq chat turn over candidates. Returns ({message, recs}|None, reason|None);
+    reason is a safe code from _GROQ_REASONS when result is None."""
     key = os.environ.get("GROQ_API_KEY")
-    if not key or not cands:
-        return None
+    if not key:
+        return None, "config_missing"
+    if not cands:
+        return None, "no_candidates"
     payload = {"interests": interests, "candidates": [
         {"id": str(b["_id"]), "title": b["title"], "authors": b.get("authors") or [],
          "year": b.get("year"), "categories": b.get("subject_slugs") or []}
@@ -617,43 +669,60 @@ def _groq_chat(cands: list, interests: list, message: str, history: list) -> Opt
         ],
     }).encode()
     req = urllib.request.Request(GROQ_URL, data=body, headers={
-        "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json",
+        "User-Agent": GROQ_UA})
     try:
         with urllib.request.urlopen(req, timeout=25) as resp:
             content = json.load(resp)["choices"][0]["message"]["content"]
         out = json.loads(content)
-    except Exception:
-        return None                               # timeout/429/malformed → fallback
+    except Exception as e:
+        return None, _classify_groq_failure(e)   # timeout/429/malformed → fallback
     msg = str(out.get("message") or "").strip() or None
     valid = {str(b["_id"]) for b in cands}
     recs = [{"id": str(r.get("id")), "reason": str(r.get("reason") or "")[:200]}
             for r in (out.get("recommendations") or [])
             if isinstance(r, dict) and str(r.get("id")) in valid and r.get("reason")]
     if msg is None and not recs:
-        return None
-    return {"message": msg, "recs": recs[:5]}
+        return None, "malformed_response"
+    return {"message": msg, "recs": recs[:5]}, None
+
+
+_PIN_RE = re.compile(r"\b([1-9][0-9]{5})\b")
+_NEAR_RE = re.compile(r"(?:near|in|around|list|available)\s+([A-Za-z][A-Za-z .]{2,40}?)(?:\s*[?.!]|$|\s+library|\s+public)", re.I)
 
 
 def _library_links(message: str, locality: Optional[str]) -> dict:
-    """Bengaluru library discovery: NO location dataset is integrated yet, so we
-    return official search links only and never claim verified addresses/holds."""
-    q = (locality or message.strip())[:80]
-    loc = urllib.request.quote(q or "Bengaluru")
+    """Bengaluru library discovery: NO real location dataset exists (Mongo has no
+    libraries collection), so we return official search links only and never
+    claim verified addresses/holdings. Locality/PIN is parsed deterministically."""
+    loc_named = (locality or "").strip()
+    if not loc_named:
+        m = _NEAR_RE.search(message)
+        if m:
+            loc_named = m.group(1).strip()
+    pin = _PIN_RE.search(message)
+    if pin and not loc_named:
+        loc_named = pin.group(1)
+    q = loc_named[:80] or "Bengaluru"
+    loc = urllib.request.quote(q)
+    holdings_note = ("No live catalogue integration exists, so shelf/borrowing "
+                     "availability is UNVERIFIED for every book.")
     return {
         "verified": False,
-        "note": ("No verified Bengaluru library location dataset is integrated, "
-                 "so I can't confirm any branch address or holding yet. These "
-                 "official search links are a starting point:"),
+        "note": ("No verified Bengaluru library location dataset is integrated "
+                 "yet, so I can't confirm addresses or holdings. These official "
+                 "search pages are the reliable starting point for " + q + ":"),
         "links": [
             {"label": "City Central Library — State Library Directory",
              "url": "https://karnataka.gov.in/newpage/Public%20Libraries.aspx"},
             {"label": "e-Granthalaya catalogue (participating libraries)",
              "url": "https://egranthalaya.nic.in/"},
-            {"label": f"Map search: public libraries near {q or 'Bengaluru'}",
+            {"label": f"Map search: public libraries near {q}",
              "url": f"https://www.google.com/maps/search/public+library+{loc}+Bengaluru"},
             {"label": "WorldCat — search library holdings for a book",
              "url": "https://search.worldcat.org/"},
         ],
+        "holdings": {"available": False, "note": holdings_note},
     }
 
 
@@ -677,7 +746,7 @@ def chat(data: ChatIn, user: dict = Depends(_current_user)):
                 "another topic or genre and I'll look again. (The catalogue is "
                 "real Open Library records, so not everything is available.)",
                 "books": [], "library": None}
-    groq = _groq_chat(cands, interests, msg, history)
+    groq, groq_err = _groq_chat(cands, interests, msg, history)
     if groq and groq["recs"]:
         by_id = {str(b["_id"]): b for b in cands}
         return {"engine": "groq", "reply": groq["message"] or
@@ -685,12 +754,13 @@ def chat(data: ChatIn, user: dict = Depends(_current_user)):
                 "books": [_book_card(by_id[r["id"]]) for r in groq["recs"]
                           if r["id"] in by_id],   # re-validate: never trust model ids
                 "library": None}
-    # deterministic fallback — clearly labelled, never presented as AI
+    # deterministic fallback — clearly labelled with the REAL cause, never smart-AI
+    reason = groq_err or "no_candidates"
+    explain = _GROQ_REASONS.get(reason, "The AI service is unavailable.")
     ranked = _keyword_rank(cands, interests, limit=4)
     by_id = {str(b["_id"]): b for b in cands}
-    return {"engine": "keyword",
-            "reply": ("My AI service is unavailable right now, so here are "
-                      "genre-matched picks from the real catalogue."),
+    return {"engine": "keyword", "fallback_reason": reason,
+            "reply": f"({explain}) Genre-matched picks from the real catalogue:",
             "books": [{**_book_card(by_id[r["id"]]), "reason": r["reason"]}
                       for r in ranked if r["id"] in by_id],
             "library": None}
