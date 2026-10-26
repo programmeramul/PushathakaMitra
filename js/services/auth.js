@@ -53,6 +53,16 @@ export const authApi = {
   updateMe(patch) { return call("/api/profile/me", { method: "PUT", body: patch }); },
 };
 
+// Auth guard: resolve the CURRENT user from the server (cookie), and treat a
+// 401 as "redirect to login". There is never a silent mock fallback.
+export async function requireAuth(redirectTo = "/pages/signup.html#login") {
+  try { return await authApi.me(); }
+  catch (e) {
+    window.location.href = redirectTo;
+    return null;
+  }
+}
+
 export function fieldErrors(err) {
   return { [err.field || "__all__"]: err.message };
 }

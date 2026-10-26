@@ -1,24 +1,28 @@
 // Dashboard — recommendations with explanations + reading goal progress.
-import { recommendationService, profileService, bookService } from "../services/api.js";
+import { recommendationService, bookService } from "../services/api.js";
 import { mountChrome, renderShelf, bookCover } from "../ui.js";
+import { requireAuth } from "../services/auth.js";
 
 const main = document.getElementById("main");
-const p = await profileService.current();
+const user = await requireAuth();          // protected page: server session decides
+const p = user ? { name: user.name, genres: user.interests, saved: [], email: user.email, onboarded: true } : null;
 const recs = await recommendationService.forReader(p);
 const books = await bookService.listBooks();
 const names = (ids) => ids.map((g) => (bookService.genres.find((x) => x.id === g) || {}).en).filter(Boolean).join(", ");
 
-const goalBooks = 6, read = Math.min(p.saved.length, goalBooks), pct = Math.round((read / goalBooks) * 100);
+const goalBooks = 6, read = 0, pct = 0;  // real goal tracking waits for persistence work
 
 main.innerHTML = `
 <section class="section">
-  <h1>Namaskara, ${p.name} 🙏</h1>
-  <p class="muted">Followed genres: ${names(p.genres) || "none yet"} · Goal: read more</p>
+  <h1>Namaskara${p.name ? ", " + p.name : ""} 🙏</h1>
+  <p class="muted">${p.interests || p.genres ? "Followed genres: " + names(p.genres) : "No interests selected yet"} · Goal: read more</p>
 </section>
 
 <section class="section">
   <h2>Your next book, matched</h2>
-  <p class="mock-note">[MOCK] recommendations — order by followed-genre scoring today; Groq-generated explanations arrive via the service layer.</p>
+  <p class="mock-note">⚠ Demonstration data — recommendations are generated from sample
+  fixture books only. Nothing below has been verified against any real library
+  catalogue. Groq-explained live recommendations are future work.</p>
   <div class="shelf" style="margin-top:1rem" id="recs"></div>
 </section>
 

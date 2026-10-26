@@ -196,6 +196,9 @@ class ProfileIn(BaseModel):
     pin_code: Optional[str] = None
     interests: Optional[List[str]] = None
     other_interest: Optional[str] = None
+    goal: Optional[str] = None          # onboarding reading goal id
+    level: Optional[str] = None         # onboarding reading level id
+    language: Optional[str] = None      # preferred reading language
     password: Optional[str] = None
     password_confirm: Optional[str] = None
 
@@ -219,6 +222,7 @@ def _self_doc(user: dict) -> dict:
         "gender": user["gender"], "home_address": user.get("home_address"),
         "pin_code": user.get("pin_code"),
         "interests": user["interests"], "other_interest": user.get("other_interest"),
+        "goal": user.get("goal"), "level": user.get("level"), "language": user.get("language"),
         "created_at": user["created_at"].isoformat(),
         "updated_at": user["updated_at"].isoformat(),
     }
@@ -329,7 +333,7 @@ def update_me(data: ProfileIn, user: dict = Depends(_current_user)):
     if "pin_code" in d and not d.get("pin_code"):
         upd["pin_code"] = None
 
-    for k in ("name", "home_address", "gender", "dob", "phone", "age", "gender"):
+    for k in ("name", "home_address", "gender", "dob", "phone", "age", "goal", "level", "language"):
         if k in d:
             upd[k] = d[k]
     if upd.get("phone"):

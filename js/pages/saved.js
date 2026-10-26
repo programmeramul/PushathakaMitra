@@ -1,8 +1,11 @@
 // Saved Books page — from local profile store (mock persistence).
 import { bookService, profileService } from "../services/api.js";
+import { requireAuth } from "../services/auth.js";
 import { mountChrome, renderShelf } from "../ui.js";
 
 const main = document.getElementById("main");
+const user = await requireAuth();
+if (user) {
 const savedIds = profileService.savedBooks();
 const all = await bookService.listBooks();
 const saved = all.filter((b) => savedIds.includes(b.id));
@@ -15,4 +18,5 @@ main.innerHTML = `
 </section>`;
 
 if (saved.length) renderShelf(main.querySelector("#grid"), saved, { reason: true });
-mountChrome("Saved");
+mountChrome("Saved"); footer && null;
+}

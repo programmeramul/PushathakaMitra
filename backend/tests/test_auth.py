@@ -238,3 +238,20 @@ def test_user_cannot_access_other_users_profile():
     assert cb.get("/api/profile/me").json()["id"] != id_a
     # profile listing endpoints that could leak contact info do not exist
     assert ca.get("/api/profiles").status_code in (404, 405)
+
+
+def test_onboarding_preferences_persist():
+    email = uid()
+    c = TestClient(app)
+    c.post("/api/auth/register", json=reg_payload(email=email))
+    r = c.put("/api/profile/me", json={"interests": ["horror", "kannada-literature"],
+                                       "goal": "finish-classics", "level": "regular",
+                                       "language": "Kannada"})
+    assert r.status_code == 200
+    doc = users.find_one({"email": email})
+    assert doc["goal"] == "finish-classics"
+    assert doc["level"] == "regular"
+    assert doc["language"] == "Kannada"
+    assert doc["interests"] == ["horror", "kannada-literature"]
+    me = c.get("/api/profile/me").json()
+    assert me["goal"] == "finish-classics" and me["language"] == "Kannada"

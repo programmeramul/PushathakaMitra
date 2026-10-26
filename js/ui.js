@@ -38,7 +38,7 @@ export function renderShelf(el, books, { reason = false } = {}) {
 export function navbar(active) {
   const p = load();
   const links = [
-    ["Home", "/index.html"], ["Dashboard", "/pages/dashboard.html"],
+    ["Home", "/index.html"],
     ["Discover", "/pages/discover.html"], ["Saved", "/pages/saved.html"],
     ["Profile", "/pages/profile.html"],
   ];
@@ -46,7 +46,7 @@ export function navbar(active) {
     <a class="logo" href="/index.html"><span class="mark">ಪ</span>PustakaMitra AI</a>
     <div class="links">
       ${links.map(([t, u]) => `<a href="${u}"${active === t ? ' aria-current="page"' : ""}>${t}</a>`).join("")}
-      ${p.email ? `<a class="btn secondary small" href="/pages/dashboard.html">${p.name}</a>`
+      ${p.email ? `<a class="btn secondary small" href="/pages/profile.html">${p.name}</a>`
                 : `<a class="btn small" href="/pages/signup.html">Sign up</a>`}
     </div>
   </div>`;

@@ -1,19 +1,15 @@
 // Profile & editable preferences — real persistence via FastAPI/MongoDB.
 // Interests (book genres) are the only recommendation signal; age/gender/
 // address/phone are stored as account data and displayed only to the owner.
-import { authApi, GENRE_OPTIONS, GENDER_OPTIONS } from "../services/auth.js";
+import { authApi, GENRE_OPTIONS, GENDER_OPTIONS, requireAuth } from "../services/auth.js";
 import { mountChrome } from "../ui.js";
 
 const main = document.getElementById("main");
 const local = JSON.parse(localStorage.getItem("pustakamitra.profile.v1") || "{}");
 
-let user = null;
-try { user = await authApi.me(); }
-catch (e) {
-  main.innerHTML = `<section class="section"><h1>Not signed in</h1>
-    <p class="muted">${e.message}. <a href="/pages/signup.html#login">Log in</a> to edit your profile.</p></section>`;
-}
-
+// profile page: server session is the only truth — unauthenticated users are
+// redirected to Login (no mock fallback)
+const user = await requireAuth();
 if (user) {
   main.innerHTML = `
   <section class="section" style="max-width:680px">

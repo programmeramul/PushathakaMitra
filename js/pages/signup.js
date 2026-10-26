@@ -170,13 +170,13 @@ function wire() {
       };
       const { user } = await authApi.register(payload);
       // success state
+      // mirror reset per-user: never carry another account's saved books forward
       localStorage.setItem("pustakamitra.profile.v1", JSON.stringify({
-        ...JSON.parse(localStorage.getItem("pustakamitra.profile.v1") || "{}"),
         id: user.id, name: user.name, email: user.email, genres: user.interests,
-        interests: user.interests, onboarded: true, persisted: true,
+        interests: user.interests, saved: [], onboarded: false, persisted: true,
       }));
       btn.textContent = "✓ Account created!";
-      setTimeout(() => (window.location.href = "/pages/dashboard.html"), 700);
+      setTimeout(() => (window.location.href = "/pages/onboarding.html"), 700);
     } catch (err) {
       btn.disabled = false; btn.style.opacity = ""; btn.textContent = "Create account";
       showErr(err.field || "__all__", err.message);
@@ -195,12 +195,11 @@ function wireLogin() {
     try {
       const { user } = await authApi.login(main.querySelector("#email").value.trim(), main.querySelector("#password").value);
       localStorage.setItem("pustakamitra.profile.v1", JSON.stringify({
-        ...(JSON.parse(localStorage.getItem("pustakamitra.profile.v1") || "{}")),
         id: user.id, name: user.name, email: user.email, interests: user.interests,
-        genres: user.interests, onboarded: true, persisted: true,
+        genres: user.interests, saved: [], onboarded: true, persisted: true,
       }));
       btn.textContent = "✓";
-      setTimeout(() => (window.location.href = "/pages/dashboard.html"), 500);
+      setTimeout(() => (window.location.href = "/pages/discover.html"), 500);
     } catch (err) {
       btn.disabled = false; btn.textContent = "Log in";
       showErr(err.code === "bad_credentials" ? "__all__" : err.field || "__all__", err.message);

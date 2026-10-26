@@ -1,11 +1,15 @@
 // Multi-step onboarding: interests → genres → goals → skill level.
 // Goal + skill are stored but only emojis/UI today; Groq tailors reasons later.
-import { bookService, save, load } from "../services/api.js";
+import { bookService } from "../services/api.js";
+import { authApi, requireAuth } from "../services/auth.js";
 import { mountChrome } from "../ui.js";
 
 const main = document.getElementById("main");
-const p0 = load();
-const state = { genres: p0.genres || [], goal: "read-more", level: p0.level || "", lang: p0.lang || "Bilingual" };
+
+// this page is for AUTHENTICATED users only — server decides, no mock user
+const user = await requireAuth();
+const p0 = user || {};
+const state = { genres: p0.interests || [], goal: p0.goal || "read-more", level: p0.level || "", lang: p0.language || "Bilingual" };
 
 const GOALS = [
   ["read-more", "Read more, more often", "📚 Ishtu vaina ishtu pustaka"],
@@ -76,10 +80,22 @@ function wire() {
   main.querySelectorAll("[data-level]").forEach((c) => c.addEventListener("click", () => { state.level = c.dataset.level; paint(); }));
   main.querySelector("#back").addEventListener("click", () => { step = Math.max(0, step - 1); paint(); });
   main.querySelector("#next").addEventListener("click", async () => {
-    if (step === 0 && !state.genres.length) { alert("Pick at least one genre to continue"); return; }
-    if (step === 3) {
-      save({ ...state, onboarded: true });
-      window.location.href = "/pages/dashboard.html";
+    if (step === 0 && !state.genres.length) { alert("Pick at least one genre to continue"); return; }    if (step === 3) {
+      // persist onboarding to the AUTHENTICATED user's Mongo document
+      // mock chip ids map onto the backend's canonical genre vocabulary
+      const backendGenres = state.genres.map((g) => (g === "kannada" ? "kannada-literature" : g));
+      const local = JSON.parse(localStorage.getItem("pustakamitra.profile.v1") || "{}");
+      try {
+        await authApi.updateMe({
+          interests: backendGenres,
+          goal: state.goal, level: state.level, language: state.lang,
+        });
+        save({ ...user, interests: backendGenres, genres: backendGenres, goal: state.goal, level: state.level, lang: state.lang, onboarded: true, persisted: true });
+        localStorage.setItem("onboarding.other", "");
+      } catch (err) {
+        alert(err.message || "Could not save preferences"); return;
+      }
+      window.location.href = "/pages/discover.html";
       return;
     }
     step += 1; paint();

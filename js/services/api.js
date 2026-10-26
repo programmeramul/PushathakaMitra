@@ -81,9 +81,9 @@ export const profileService = {
 const KEY = "pustakamitra.profile.v1";
 export function load() {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) || { name: "Ananya", email: "", genres: [], goal: "", level: "", saved: [], onboarded: false };
+    return JSON.parse(localStorage.getItem(KEY)) || { name: "", email: "", genres: [], goal: "", level: "", saved: [], onboarded: false };
   } catch {
-    return { name: "Ananya", email: "", genres: [], goal: "", level: "", saved: [], onboarded: false };
+    return { name: "", email: "", genres: [], goal: "", level: "", saved: [], onboarded: false };
   }
 }
 export function save(partial) {
