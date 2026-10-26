@@ -2,6 +2,7 @@
 // shelf renderer, nav/footer injection. ES module shared by every page.
 import { load, profileService, libraryService } from "./services/api.js";
 import { authApi } from "./services/auth.js";
+import { initChatbot, destroyChatbot } from "./chatbot.js";
 
 // missing-cover placeholder: flat neutral tile with the title, NOT a fake cover
 export function bookCover(b, { wide = false } = {}) {
@@ -86,10 +87,14 @@ export async function authoriseNavbar(active) {
       + `<button class="btn small" id="navlogout" aria-label="Log out">Log out</button>`;
     document.getElementById("navlogout").addEventListener("click", async () => {
       await authApi.logout();
+      destroyChatbot();                       // wipe conversation + widget on logout
       localStorage.removeItem("pustakamitra.profile.v1");
       window.location.href = "/index.html";
     });
+    // chatbot appears only for users WITH saved interests (server truth)
+    if ((user.interests || []).length) { initChatbot(user.interests); }
   } else {
+    destroyChatbot();
     links.innerHTML = a("/index.html", "Home", "", { page: "Home" })
       + a("/pages/discover.html", "Discover", "", { page: "Discover" })
       + `<a class="btn secondary small" href="/pages/signup.html#login">Login</a>`

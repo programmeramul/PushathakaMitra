@@ -263,3 +263,26 @@ def test_frontend_genres_have_ids_and_labels(node=None):
     r = subprocess.run(["node", "--input-type=module", "-e", script], capture_output=True, text=True)
     assert r.returncode == 0, f"frontend genre check failed: {r.stderr}"
     assert "GENRES-OK" in r.stdout
+
+def test_groq_model_env_override(monkeypatch):
+    """GROQ_MODEL (env or backend/.env) reaches the Groq request body."""
+    import backend.main as main
+    monkeypatch.setattr(main, "GROQ_MODEL", "llama-test-model")
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    captured = {}
+    class FakeResp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return json.dumps({"choices": [{"message": {"content": "{}"}}]}).encode()
+    def fake_urlopen(req, timeout=None):
+        captured["body"] = json.loads(req.data.decode())
+        return FakeResp()
+    monkeypatch.setattr("backend.main.urllib.request.urlopen", fake_urlopen)
+    r = main._groq_rank([{"_id": "x", "title": "T", "authors": [], "subject_slugs": []}], [])
+    assert captured["body"]["model"] == "llama-test-model"
+
+
+def test_backend_env_file_not_tracked():
+    import subprocess
+    r = subprocess.run(["git", "check-ignore", "-v", "backend/.env"], capture_output=True, text=True)
+    assert r.returncode == 0, "backend/.env must stay ignored by Git"

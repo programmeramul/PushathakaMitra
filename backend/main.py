@@ -32,12 +32,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from pymongo import MongoClient, errors
 
+# backend/.env is loaded explicitly (next to main.py) so startup works from any
+# cwd. Real environment variables always win (override=False) — shell/CI settings
+# are never silently replaced by file values.
+from pathlib import Path as _Path
+from dotenv import load_dotenv as _load_dotenv
+_load_dotenv(_Path(__file__).with_name(".env"), override=False)
+
 SESSION_COOKIE = "pm_session"
 SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "180"))
 SESSION_HASH_KEY = os.environ.get("SESSION_HASH_KEY", "dev-only-session-key")
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.environ.get("MONGO_DB", "pustakamitra")  # tests override to pustakamitra_test
 SECURE_COOKIES = os.environ.get("SECURE_COOKIES") == "1"
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 ph = PasswordHasher()
 
@@ -475,7 +483,7 @@ def _groq_rank(cands: list, interests: list) -> Optional[list]:
                       "authors": b.get("authors") or [], "year": b.get("year"),
                       "categories": b.get("subject_slugs") or []} for b in cands]
     body = json.dumps({
-        "model": "llama-3.3-70b-versatile",
+        "model": GROQ_MODEL,
         "messages": [
             {"role": "system", "content":
              "You recommend books for a reader. From the given candidates ONLY, "
@@ -523,6 +531,169 @@ def recommendations(user: dict = Depends(_current_user)):
     return {"engine": engine,
             "items": [{**_pub_book(by_id[r["id"]]), "reason": r.get("reason", "")}
                       for r in recs if r["id"] in by_id and r.get("reason")][:6]}
+
+
+# ------------------------------ chatbot ------------------------------
+# AI reading companion over the REAL catalogue. Authenticated + onboarded only.
+class ChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=600)
+    history: List[dict] = Field(default_factory=list, max_length=10)
+    locality: Optional[str] = Field(default=None, max_length=80)
+
+
+_KN_HINTS = ("ಕನ್ನಡ", "ಪುಸ್ತಕ", "ಓದು", "ಗ್ರಂಥಾಲಯ", "ಪುಸ್ತಕಾಲಯ")
+_LIBRARY_HINTS = ("library", "librar", "granthalaya", "ಗ್ರಂಥಾಲಯ", "ಪುಸ್ತಕಾಲಯ",
+                  "ಗ್ರಂಥಾಲಯದ")
+_GENRE_HINTS = {
+    "mystery": ("mystery", "mysteries", "ರಹಸ್ಯ"),
+    "horror": ("horror", "ಭಯ", "ಭೀತಿ"),
+    "fantasy": ("fantasy", "ಕಲ್ಪನಾವಿಶ್ವ"),
+    "romance": ("romance", "love story", "ಪ್ರೇಮ"),
+    "thriller": ("thriller", "ಥ್ರಿಲ್ಲರ್"),
+    "science-fiction": ("science fiction", "sci-fi", "ಸೈನ್ಸ್ ಫಿಕ್ಷನ್"),
+    "spirituality": ("spiritual", "spirituality", "ಆಧ್ಯಾತ್ಮ"),
+    "philosophy": ("philosophy", "ತತ್ವ", "ತತ್ವಶಾಸ್ತ್ರ"),
+    "history": ("history", "ಇತಿಹಾಸ"),
+    "technology": ("technology", "business", "ತಂತ್ರಜ್ಞಾನ"),
+    "biography": ("biography", "leader", "leadership", "ಜೀವನಚರಿತ್ರೆ"),
+    "self-development": ("self-help", "self development", "beginner", "start reading",
+                         "ಸ್ವಯಂ"),
+    "kannada-literature": ("kannada literature", "kannada novel", "ಕನ್ನಡ ಸಾಹಿತ್ಯ",
+                           "parva", "parvœ"),
+}
+
+
+def _book_card(b: dict) -> dict:
+    c = _pub_book(b)
+    c.pop("description", None)                   # cards stay compact
+    return c
+
+
+def _candidates_for(message: str, interests: list) -> list:
+    msg = message.lower()
+    want_kn = "kannada" in msg or any(h in message for h in _KN_HINTS)
+    slugs = {s for s in interests}
+    for slug, hints in _GENRE_HINTS.items():
+        if any(h in msg for h in hints):
+            slugs.add(slug)
+    if not slugs:
+        slugs = {s for s in interests} or set()   # fall back to real saved interests
+    cur: dict = {}
+    slug_list = sorted(slugs)
+    if slug_list:
+        cur["subject_slugs"] = {"$in": slug_list}
+    if want_kn:
+        cur["language"] = "Kannada"
+    cands = list(books_coll.find(cur, limit=60)) or \
+        list(books_coll.find({"subject_slugs": {"$in": slug_list}} if slug_list else {},
+                             limit=60))
+    return cands
+
+
+def _groq_chat(cands: list, interests: list, message: str, history: list) -> Optional[dict]:
+    """Groq chat turn over candidates. Returns {message, engine:'groq'} or None."""
+    key = os.environ.get("GROQ_API_KEY")
+    if not key or not cands:
+        return None
+    payload = {"interests": interests, "candidates": [
+        {"id": str(b["_id"]), "title": b["title"], "authors": b.get("authors") or [],
+         "year": b.get("year"), "categories": b.get("subject_slugs") or []}
+        for b in cands[:40]]}
+    body = json.dumps({
+        "model": GROQ_MODEL, "temperature": 0.4, "max_tokens": 500,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content":
+             "You are PustakaMitra AI, a warm reading companion for Kannada and "
+             "English readers in Bengaluru. Answer in the user's language "
+             "(Kannada or English). Recommend from the given candidates ONLY. "
+             "Reply with strict JSON: {\"message\": \"<2-4 friendly sentences>\", "
+             "\"recommendations\": [{\"id\": \"<candidate id>\", \"reason\": "
+             "\"<one short sentence>\"}]}. Use only candidate ids from the list. "
+             "Never invent books, ratings, or library availability. Do not repeat "
+             "books already given in the conversation history."},
+            {"role": "user", "content": json.dumps(
+                {"history": history[-6:], "message": message, "context": payload})},
+        ],
+    }).encode()
+    req = urllib.request.Request(GROQ_URL, data=body, headers={
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            content = json.load(resp)["choices"][0]["message"]["content"]
+        out = json.loads(content)
+    except Exception:
+        return None                               # timeout/429/malformed → fallback
+    msg = str(out.get("message") or "").strip() or None
+    valid = {str(b["_id"]) for b in cands}
+    recs = [{"id": str(r.get("id")), "reason": str(r.get("reason") or "")[:200]}
+            for r in (out.get("recommendations") or [])
+            if isinstance(r, dict) and str(r.get("id")) in valid and r.get("reason")]
+    if msg is None and not recs:
+        return None
+    return {"message": msg, "recs": recs[:5]}
+
+
+def _library_links(message: str, locality: Optional[str]) -> dict:
+    """Bengaluru library discovery: NO location dataset is integrated yet, so we
+    return official search links only and never claim verified addresses/holds."""
+    q = (locality or message.strip())[:80]
+    loc = urllib.request.quote(q or "Bengaluru")
+    return {
+        "verified": False,
+        "note": ("No verified Bengaluru library location dataset is integrated, "
+                 "so I can't confirm any branch address or holding yet. These "
+                 "official search links are a starting point:"),
+        "links": [
+            {"label": "City Central Library — State Library Directory",
+             "url": "https://karnataka.gov.in/newpage/Public%20Libraries.aspx"},
+            {"label": "e-Granthalaya catalogue (participating libraries)",
+             "url": "https://egranthalaya.nic.in/"},
+            {"label": f"Map search: public libraries near {q or 'Bengaluru'}",
+             "url": f"https://www.google.com/maps/search/public+library+{loc}+Bengaluru"},
+            {"label": "WorldCat — search library holdings for a book",
+             "url": "https://search.worldcat.org/"},
+        ],
+    }
+
+
+@app.post("/api/chat")
+def chat(data: ChatIn, user: dict = Depends(_current_user)):
+    msg = data.message.strip()
+    # honest guard: chatbot is for users who completed onboarding (interests saved)
+    interests = user.get("interests") or []
+    history = [h for h in data.history if
+               isinstance(h, dict) and isinstance(h.get("role"), str)
+               and isinstance(h.get("content"), str)][:10]
+    if any(h in msg for h in _LIBRARY_HINTS) or (data.locality or "").strip():
+        return {"engine": "links", "reply":
+                "I can point you to official library search pages — "
+                "I don't have verified Bengaluru holdings data yet.",
+                "books": [], "library": _library_links(msg, data.locality)}
+    cands = _candidates_for(msg, interests)
+    if not cands:
+        return {"engine": "empty", "reply":
+                "I couldn't find anything in the catalogue for that yet — try "
+                "another topic or genre and I'll look again. (The catalogue is "
+                "real Open Library records, so not everything is available.)",
+                "books": [], "library": None}
+    groq = _groq_chat(cands, interests, msg, history)
+    if groq and groq["recs"]:
+        by_id = {str(b["_id"]): b for b in cands}
+        return {"engine": "groq", "reply": groq["message"] or
+                "Here are some picks from the catalogue:",
+                "books": [_book_card(by_id[r["id"]]) for r in groq["recs"]
+                          if r["id"] in by_id],   # re-validate: never trust model ids
+                "library": None}
+    # deterministic fallback — clearly labelled, never presented as AI
+    ranked = _keyword_rank(cands, interests, limit=4)
+    by_id = {str(b["_id"]): b for b in cands}
+    return {"engine": "keyword",
+            "reply": ("My AI service is unavailable right now, so here are "
+                      "genre-matched picks from the real catalogue."),
+            "books": [{**_book_card(by_id[r["id"]]), "reason": r["reason"]}
+                      for r in ranked if r["id"] in by_id],
+            "library": None}
 
 
 if __name__ == "__main__":
