@@ -1,6 +1,6 @@
 // Discover Books — search, genre filter, language filter, availability toggle.
 import { bookService } from "../services/api.js";
-import { navbar, footer, renderShelf, bookCover } from "../ui.js";
+import { mountChrome, renderShelf, bookCover } from "../ui.js";
 
 const main = document.getElementById("main");
 const params = new URLSearchParams(location.search);
@@ -52,4 +52,4 @@ main.querySelector("#availbtn").addEventListener("click", (e) => {
 main.querySelector("#sform").addEventListener("submit", (e) => { e.preventDefault(); state.q = e.target.q.value; run(); });
 
 run();
-navbar("Discover"); footer();
+mountChrome("Discover");

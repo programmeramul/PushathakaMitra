@@ -1,7 +1,7 @@
 // Multi-step onboarding: interests → genres → goals → skill level.
 // Goal + skill are stored but only emojis/UI today; Groq tailors reasons later.
 import { bookService, save, load } from "../services/api.js";
-import { navbar } from "../ui.js";
+import { mountChrome } from "../ui.js";
 
 const main = document.getElementById("main");
 const p0 = load();
@@ -87,4 +87,4 @@ function wire() {
 }
 
 paint();
-navbar("Profile");
+mountChrome("Profile");

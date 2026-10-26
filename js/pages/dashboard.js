@@ -1,6 +1,6 @@
 // Dashboard — recommendations with explanations + reading goal progress.
 import { recommendationService, profileService, bookService } from "../services/api.js";
-import { navbar, footer, renderShelf, bookCover } from "../ui.js";
+import { mountChrome, renderShelf, bookCover } from "../ui.js";
 
 const main = document.getElementById("main");
 const p = await profileService.current();
@@ -40,4 +40,4 @@ main.innerHTML = `
 </section>`;
 
 renderShelf(main.querySelector("#recs"), recs, { reason: true });
-navbar("Dashboard"); footer();
+mountChrome("Dashboard");

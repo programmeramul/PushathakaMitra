@@ -1,6 +1,6 @@
 // Landing page — hero + search + featured genres + popular books (mock data).
 import { bookService, recommendationService } from "../services/api.js";
-import { navbar, footer, renderShelf } from "../ui.js";
+import { mountChrome, renderShelf } from "../ui.js";
 
 const main = document.getElementById("main");
 
@@ -51,4 +51,4 @@ chipbar.innerHTML = bookService.genres
   .map((g) => `<a class="chip" href="/pages/discover.html?genre=${g.id}" style="text-decoration:none">${g.en}<span class="kn">${g.kn}</span></a>`)
   .join("");
 
-navbar("Home"); footer();
+mountChrome("Home");

@@ -2,7 +2,7 @@
 // Availability is fixture data and every branch name/hold is tagged [MOCK];
 // nothing here may be published as real Bengaluru library holdings.
 import { libraryService } from "../services/api.js";
-import { navbar, footer, bookCover } from "../ui.js";
+import { mountChrome, bookCover } from "../ui.js";
 
 const main = document.getElementById("main");
 const bookId = new URLSearchParams(location.search).get("book");
@@ -29,4 +29,4 @@ main.innerHTML = `
   </div>
 </section>`;
 
-navbar(""); footer();
+mountChrome("");

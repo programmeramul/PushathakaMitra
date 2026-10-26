@@ -1,6 +1,6 @@
 // Book details + similar row + Find-in-libraries action.
 import { bookService, profileService, libraryService } from "../services/api.js";
-import { navbar, footer, renderShelf, bookCover } from "../ui.js";
+import { mountChrome, renderShelf, bookCover } from "../ui.js";
 
 const main = document.getElementById("main");
 const id = new URLSearchParams(location.search).get("id");
@@ -41,4 +41,4 @@ if (!book) {
   });
 }
 
-navbar(""); footer();
+mountChrome("");
