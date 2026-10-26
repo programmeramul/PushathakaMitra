@@ -32,8 +32,8 @@ img { max-width: 100%; }
 /* nav */
 .topnav { border-bottom: var(--border); background: var(--ivory); position: sticky; top: 0; z-index: 20; }
 .topnav .inner { display: flex; align-items: center; gap: var(--space-3); height: 64px; max-width: var(--maxw); margin: 0 auto; padding-inline: var(--space-3); }
-.logo { font-family: var(--serif); font-size: 1.15rem; font-weight: 700; color: var(--green); display: flex; gap: .5rem; align-items: center; }
-.logo .mark { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; color: var(--ivory); font-size: 14px; font-family: var(--serif); }
+.logo { font-family: var(--serif); font-size: 1.15rem; font-weight: 700; color: var(--green); display: flex; gap: 10px; align-items: center; }
+.logo .mark { width: 32px; height: 32px; border-radius: 50%; object-fit: contain; flex: none; }
 .topnav .links { margin-left: auto; display: flex; gap: var(--space-2); align-items: center; font-weight: 500; }
 .topnav .links a { padding: .4rem .7rem; border-radius: var(--radius); }
 .topnav .links a[aria-current="page"] { background: var(--ivory-200); color: var(--green); }
@@ -179,4 +179,8 @@ footer a { color: var(--green-700); }
 @media (max-width: 640px) {
   .hero { padding-block: var(--space-2) 0; }
   .hero-title { font-size: clamp(1.7rem, 7vw, 2.4rem); }
+}
+@media (max-width: 640px) {
+  .logo .mark { width: 28px; height: 28px; }
+  .logo .mark { flex: none; }
 }

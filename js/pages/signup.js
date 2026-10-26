@@ -213,5 +213,5 @@ function wireLogin() {
 build();
 
 // chrome (no footer on auth)
-document.getElementById("nav").innerHTML = `<div class="inner"><a class="logo" href="/index.html"><span class="mark">ಪ</span>PustakaMitra AI</a><div class="links"><a href="/index.html" class="btn secondary small">← Back to home</a></div></div>`;
+document.getElementById("nav").innerHTML = `<div class="inner"><a class="logo" href="/index.html"><img src="/favicon.svg" alt="" class="mark" width="32" height="32">PustakaMitra AI</a><div class="links"><a href="/index.html" class="btn secondary small">← Back to home</a></div></div>`;
 document.getElementById("footer")?.remove();

@@ -59,7 +59,7 @@ export function navbar(active) {
   // base links render immediately (no flash); session-dependent links are
   // filled by authoriseNavbar() below — localStorage is NOT proof of auth.
   return `<div class="inner">
-    <a class="logo" href="/index.html"><span class="mark">ಪ</span>PustakaMitra AI</a>
+    <a class="logo" href="/index.html"><img src="/favicon.svg" alt="" class="mark" width="32" height="32">PustakaMitra AI</a>
     <div class="links" id="navlinks">
       <a href="/index.html"${active === "Home" ? ' aria-current="page"' : ""}>Home</a>
       <a href="/pages/discover.html"${active === "Discover" ? ' aria-current="page"' : ""}>Discover</a>
