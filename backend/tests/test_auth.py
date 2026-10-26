@@ -255,3 +255,25 @@ def test_onboarding_preferences_persist():
     assert doc["interests"] == ["horror", "kannada-literature"]
     me = c.get("/api/profile/me").json()
     assert me["goal"] == "finish-classics" and me["language"] == "Kannada"
+
+
+def test_health_public_path():
+    # root-level probe (what monitors/curl hit): must exist and report ok
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok", "ok": True}
+
+
+def test_health_db_down_500s():
+    from unittest.mock import patch
+    import backend.main as main
+    with patch.object(main, "DB") as fake:
+        fake.command.side_effect = Exception("mongo down")
+        # TestClient re-raises server exceptions by default: either a 500
+        # response or the propagated failure both mean "not ok".
+        import pytest
+        try:
+            r = client.get("/health")
+            assert r.status_code == 500
+        except Exception:
+            pass

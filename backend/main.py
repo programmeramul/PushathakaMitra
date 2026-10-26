@@ -250,10 +250,19 @@ def _current_user(pm_session: Optional[str] = Cookie(default=None)) -> dict:
     return user
 
 
-@app.get("/api/health")
 def health():
     DB.command("ping")
-    return {"ok": True}
+    return {"status": "ok", "ok": True}
+
+# one implementation, two paths: /health is the public probe (monitors, curl),
+# /api/health is what the existing tests/clients already use. Both require a
+# live MongoDB round-trip — never report ok without checking the DB.
+app.add_api_route("/health", health, methods=["GET"])
+
+
+@app.get("/api/health")
+def health_api():
+    return health()
 
 
 @app.post("/api/auth/register", status_code=201)
