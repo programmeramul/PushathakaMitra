@@ -52,7 +52,7 @@ main.innerHTML = `
 </section>`;
 
 document.getElementById("genrechips").innerHTML = bookService.genres
-  .map((g) => `<a class="chip" href="/pages/discover.html?genre=${g[0]}" style="text-decoration:none">${g[1]}<span class="kn">${g[2]}</span></a>`)
+  .map((g) => `<a class="chip" href="/pages/discover.html?genre=${g.id}" style="text-decoration:none">${g.en}<span class="kn">${g.kn}</span></a>`)
   .join("");
 
 // subtle step reveal; skipped entirely when the user prefers reduced motion

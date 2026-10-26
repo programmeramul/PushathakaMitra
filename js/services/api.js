@@ -24,16 +24,29 @@ async function call(path, { method = "GET", body, expect } = {}) {
 
 export { call };
 
+// Canonical genre vocabulary — stable IDs + English/Kannada labels.
+// The only interest data source: onboarding chips, Discover filters and
+// profile picks all read these fields (id / en / kn). Backend GENRES must match.
 export const GENRES = [
-  ["horror", "Horror", "ಭಯ"], ["supernatural", "Supernatural", "ಅಲೌಕಿಕ"],
-  ["spirituality", "Spirituality", "ಆಧ್ಯಾತ್ಮ"], ["mystery", "Mystery", "ರಹಸ್ಯ"],
-  ["thriller", "Thriller", "ಥ್ರಿಲ್ಲರ್"], ["fantasy", "Fantasy", "ಕಲ್ಪನಾವಿಶ್ವ"],
-  ["romance", "Romance", "ಪ್ರೇಮ"], ["science-fiction", "Science Fiction", "ಸೈನ್ಸ್ ಫಿಕ್ಷನ್"],
-  ["technology", "Technology", "ತಂತ್ರಜ್ಞಾನ"], ["self-development", "Self-Development", "ಸ್ವಯಂ"],
-  ["biography", "Biography", "ಜೀವನಚರಿತ್ರೆ"], ["history", "History", "ಇತಿಹಾಸ"],
-  ["philosophy", "Philosophy", "ತತ್ವಶಾಸ್ತ್ರ"],
-  ["kannada-literature", "Kannada Literature", "ಕನ್ನಡ ಸಾಹಿತ್ಯ"],
+  { id: "horror", en: "Horror", kn: "ಭಯ" },
+  { id: "supernatural", en: "Supernatural", kn: "ಅಲೌಕಿಕ" },
+  { id: "spirituality", en: "Spirituality", kn: "ಆಧ್ಯಾತ್ಮ" },
+  { id: "mystery", en: "Mystery", kn: "ರಹಸ್ಯ" },
+  { id: "thriller", en: "Thriller", kn: "ಥ್ರಿಲ್ಲರ್" },
+  { id: "fantasy", en: "Fantasy", kn: "ಕಲ್ಪನಾವಿಶ್ವ" },
+  { id: "romance", en: "Romance", kn: "ಪ್ರೇಮ" },
+  { id: "science-fiction", en: "Science Fiction", kn: "ಸೈನ್ಸ್ ಫಿಕ್ಷನ್" },
+  { id: "technology", en: "Technology", kn: "ತಂತ್ರಜ್ಞಾನ" },
+  { id: "self-development", en: "Self-Development", kn: "ಸ್ವಯಂ" },
+  { id: "biography", en: "Biography", kn: "ಜೀವನಚರಿತ್ರೆ" },
+  { id: "history", en: "History", kn: "ಇತಿಹಾಸ" },
+  { id: "philosophy", en: "Philosophy", kn: "ತತ್ವಶಾಸ್ತ್ರ" },
+  { id: "kannada-literature", en: "Kannada Literature", kn: "ಕನ್ನಡ ಸಾಹಿತ್ಯ" },
 ];
+// validate once at load: a broken entry must fail loudly here, not render "undefined"
+for (const g of GENRES) {
+  if (!g.id || !g.en || !g.kn) throw new Error(`Bad genre entry: ${JSON.stringify(g)}`);
+}
 
 export const bookService = {
   async search({ q = "", genre = "", lang = "", page = 1, page_size = 24 } = {}) {

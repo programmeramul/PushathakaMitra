@@ -230,3 +230,36 @@ def test_recommendations_no_interests_honest_engine():
 
 def test_recommendations_require_session():
     assert TestClient(app).get("/api/recommendations").status_code == 401
+
+
+def test_frontend_genres_have_ids_and_labels(node=None):
+    """The canonical GENRES list renders valid id/en/kn — no undefined chips."""
+    import subprocess, textwrap, sys
+    script = textwrap.dedent("""
+        import { GENRES } from "/home/amul/Desktop/PusathakaMitra/js/services/api.js";
+        const valid = new Set(["horror","supernatural","spirituality","mystery","thriller",
+            "fantasy","romance","science-fiction","technology","self-development",
+            "biography","history","philosophy","kannada-literature"]);
+        // required by onboarding render (g.id/g.en/g.kn):
+        for (const g of GENRES) {
+            if (!g || typeof g.id !== "string" || !g.id) throw new Error("CHIP id bad: " + JSON.stringify(g));
+            if (!g.en || !g.kn) throw new Error("CHIP label undefined: " + JSON.stringify(g));
+            if (!valid.has(g.id)) throw new Error("CHIP not backend-valid: " + g.id);
+        }
+        // source files must read canonical properties, never g[0]/g[1]/g[2]
+        const fs = await import("fs");
+        for (const f of ["landing", "discover", "onboarding"]) {
+            const src = fs.readFileSync(`/home/amul/Desktop/PusathakaMitra/js/pages/${f}.js`, "utf8");
+            if (/\bg\[\d\]/.test(src)) throw new Error(f + " still indexes genres positionally");
+            if (/g\.en|g\.kn|g\.id/.test(src)) { /* good */ }
+        }
+        // onboarding markup builds labelled buttons, never "undefined":
+        const onb = fs.readFileSync("/home/amul/Desktop/PusathakaMitra/js/pages/onboarding.js", "utf8");
+        const chip = onb.match(/bookService\.genres\.map\(\(g\) =>[\s\S]*?\)/)[0];
+        const html = `(button ${chip.replace(/\\$\{g\.en\}/, "Horror").replace(/\\$\{g\.kn\}/, "ಭಯ").replace(/\\$\{g\.id\}/, "horror")})`;
+        if (html.includes("undefined") || html.includes("null")) throw new Error("onboarding chip renders undefined/null");
+        console.log("GENRES-OK");
+    """)
+    r = subprocess.run(["node", "--input-type=module", "-e", script], capture_output=True, text=True)
+    assert r.returncode == 0, f"frontend genre check failed: {r.stderr}"
+    assert "GENRES-OK" in r.stdout

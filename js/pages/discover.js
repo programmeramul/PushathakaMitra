@@ -17,7 +17,7 @@ main.innerHTML = `
   </form>
   <div class="chipbar" style="margin-top:1rem" id="genrechips">
     <button class="chip" data-g="all" aria-pressed="${state.genre === "all"}">All</button>
-    ${bookService.genres.map((g) => `<button class="chip" data-g="${g[0]}" aria-pressed="${state.genre === g[0]}">${g[1]}<span class="kn">${g[2]}</span></button>`).join("")}
+    ${bookService.genres.map((g) => `<button class="chip" data-g="${g.id}" aria-pressed="${state.genre === g.id}">${g.en}<span class="kn">${g.kn}</span></button>`).join("")}
   </div>
   <div class="chipbar" style="margin-top:.6rem">
     ${["all", "Kannada", "English", "Bilingual"].map((l) => `<button class="chip" data-l="${l}" aria-pressed="${state.lang === l}">${l === "all" ? "Any language" : l}</button>`).join("")}
