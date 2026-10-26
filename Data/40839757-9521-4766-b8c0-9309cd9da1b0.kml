@@ -1,0 +1,1177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Libraries in Bengaluru </name>
+    <description/>
+    <Style id="icon-1899-0288D1-nodesc-normal">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/blu-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-0288D1-nodesc-highlight">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/blu-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-0288D1-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1899-7CB342-nodesc-normal">
+      <IconStyle>
+        <color>ff42b37c</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-7CB342-nodesc-highlight">
+      <IconStyle>
+        <color>ff42b37c</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-7CB342-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-7CB342-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-7CB342-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1899-880E4F-nodesc-normal">
+      <IconStyle>
+        <color>ff4f0e88</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-880E4F-nodesc-highlight">
+      <IconStyle>
+        <color>ff4f0e88</color>
+        <scale>1</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-880E4F-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-880E4F-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-880E4F-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Folder>
+      <name>Government Libraries</name>
+      <Placemark>
+        <name>City Centre Library Poorvavalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.627704,12.97393,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Koramangala Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.627339,12.928302,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library Ram Mandir Grounds</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.556107,12.986117,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library, Lakkasandra</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.597567,12.942962,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Magadi Road Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.561476,12.972727,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>State Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.581457,13.097904,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library West zone</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.56525,12.960544,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.642544,12.96803,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.628145,12.979116,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.600248,12.963203,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[Indira Priyadarshini Children's Library Cubbon Park]]></name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.589577,12.976062,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Dasarahalli Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.543521,12.984377,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.615031,12.96131,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.558179,13.060296,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Grama Panchayat Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.477091,13.138951,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library Kumbalagodu</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.446356,12.879584,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Central Library--BTM Layout -2 ND Stage</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.606153,12.912033,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.533512,13.010468,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.634568,13.075629,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Basavagudi MLA Office and E-Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.558803,12.937176,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library - Dayanand Nagar</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.565751,12.989298,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagara Kendra Granthalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.548312,13.006055,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.536072,13.003143,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City center library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.594633,13.01844,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagara Kendra Granthalalaya Puravalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.588883,13.0247,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Kengeri Satellite Town Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.481724,12.916788,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagar Kendra Library Uttarvalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.58144,12.99951,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Saraswathi Bandara Granthalaya(Library)</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.571695,12.958303,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Government Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.550052,12.975646,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Govt Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.574144,12.987244,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagara Kendhra Granthalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.605571,12.964873,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagara Kendra Granthalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.627731,12.973953,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Goverment library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.612082,12.996504,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.594389,13.008528,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library(Rituraj)</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.560011,13.0035,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Sarvajanika Granthalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.551132,12.948172,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library, N R Colony Branch</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.569428,12.937725,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nagara Kendra Granthalaya</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.595713,12.950548,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.642187,13.020464,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Government Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.575337,13.104375,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.498728,13.036541,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Vinayaka Layout Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.52993,12.968938,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>J K Puram Reading Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.599681,12.95086,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.541991,12.948305,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library, Cottonpet</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.570328,12.97145,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library North Zone Bangalore</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.571288,13.000093,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.565649,12.943391,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jayanagar 5th Block Residents Welfare Association - Free Reading Room</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.584996,12.921644,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library, HSR LAYOUT BRANCH,SOUTH ZONE.</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.641425,12.914644,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.593349,13.026105,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Government Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.581944,12.954668,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.565267,12.942582,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.627573,12.905723,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library, South Zone</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.580756,12.935664,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.564726,12.925434,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Bangalore Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.586062,12.919714,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Government of Karnataka Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.593355,13.026046,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Government of Karnataka Department of Public Libraries</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.571314,13.000064,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.570689,12.949044,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Vijayanagar Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.538587,12.973343,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.592288,12.959219,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>State Library Office</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.590647,12.974447,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City central library south zone</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.576712,12.889985,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[E-library & jayanagara shikashanika samiti]]></name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.586034,12.919917,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>KSRP Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.631567,12.921976,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.543313,12.904752,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Sheshadri Iyer Memorial Hall (STATE CENTRAL LIBRARY)</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.590635,12.974395,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>BBMP Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.678517,13.018448,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Peenya Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.527385,13.033644,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library West Zone</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.534664,12.960197,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.563778,12.951375,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gayatri Nagar Public Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.558169,13.000892,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.623578,12.954142,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.61049,12.968038,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.607504,13.07922,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library - Yelahanka Oldtown</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.594248,13.10225,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Library, Cottonpet</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.570328,12.97145,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CITY CENTRAL LIBRARY WEST ZONE</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.504397,13.003549,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>City Central Liberay</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.578602,13.059399,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>CITY CENTRAL LIBRARY</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.591159,12.993667,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Privately Run</name>
+      <Placemark>
+        <name>Library Booksaxis</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.651688,12.915149,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Nool Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.671768,12.985131,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Eloor Lending Libraries</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.605257,12.980779,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>JustBooks BTM Layout</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.605664,12.913288,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>JustBooks JP Nagar</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.581802,12.889571,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Compete Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.537515,12.969487,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>JustBooks Sahakarnagar</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.585052,13.062979,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Justbooks</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.506121,12.968388,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>LIPI Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.610663,12.914022,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>MYMITRA CHILDRENS LIBRARY, JAYANAGAR, BANGALORE</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.59387,12.926644,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Quest Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.640945,12.84288,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ThinkBox Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.673678,12.973873,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Speed Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.57139,12.960689,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Uptoschoolworksheets Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.675932,12.923574,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Ministry of Studies</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.572381,12.997646,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[Nuk Library & Activity Centre]]></name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.676044,12.903839,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Justbooks Vijaya Bank Layout</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.610783,12.893465,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Hangout Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.671836,12.928382,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>ATMA Library</name>
+        <styleUrl>#icon-1899-880E4F-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.694281,12.816032,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Miscellaneous</name>
+      <Placemark>
+        <name>IIMB Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.602092,12.894622,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Jyoti Nivas Library Center</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.61577,12.932718,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Dr BR Ambedkar Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.567995,12.965113,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Karnataka Sangha Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.54805,13.047067,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Ahmadiyya Library Bangalore</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.593052,12.950547,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Old Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.592009,12.959368,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Library Of Karnataka College</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.636155,13.086062,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>IIA Library Building</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.621235,12.926715,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Indian Medical Association Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.572858,12.959911,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>JRD Tata Memorial Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.565971,13.016229,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>British Council</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.597085,12.974239,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Mythic Society</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.586364,12.972298,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Indian Institute of World Culture</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.576139,12.943953,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Whitefield Inner circle Park Public Library</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.748853,12.97195,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Ambedkar samudhaya bhavana parangipalya</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.649285,12.908437,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Karnataka Sanga - Kuvempu Sabhangana</name>
+        <styleUrl>#icon-1899-7CB342-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            77.548028,13.047096,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>
