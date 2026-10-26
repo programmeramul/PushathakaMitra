@@ -1,5 +1,7 @@
-// Landing page — hero + search + featured genres + popular books (mock data).
-import { bookService, recommendationService } from "../services/api.js";
+// Landing page — hero, real catalogue browsing, genre entry points.
+// Section titles reflect actual data; never claims popularity or personal
+//ization without evidence (AI picks are labelled only when Groq succeeded).
+import { bookService, recommendationService, load } from "../services/api.js";
 import { mountChrome, renderShelf } from "../ui.js";
 
 const main = document.getElementById("main");
@@ -9,8 +11,8 @@ const search = `
   <p class="tag gold" style="margin-bottom:1rem">ಪುಸ್ತಕಮಿತ್ರ · PustakaMitra AI</p>
   <h1>Nimma Interest,<br>Nimma Next Book!</h1>
   <p class="muted" style="max-width:560px;margin:1rem auto 1.5rem">
-    Personalised book recommendations in Kannada &amp; English — plus where to find
-    them in Bengaluru libraries.
+    Book discovery for Kannada &amp; English readers in Bengaluru — grounded in a
+    real, source-traceable catalogue.
   </p>
   <form class="searchbar" style="max-width:560px;margin:0 auto;text-align:left" action="/pages/discover.html">
     <input type="search" name="q" placeholder="Search books by title or author…" aria-label="Search books">
@@ -18,37 +20,60 @@ const search = `
   </form>
 </section>`;
 
-const genreSection = `
-<section class="section">
-  <h2>Featured genres</h2>
-  <div class="chipbar" style="margin-top:1rem" id="genrechips"></div>
-</section>`;
-
-const popularSection = `
+const browse = (title) => `
 <section class="section">
   <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap">
-    <h2>Popular with readers like you</h2>
+    <h2 id="shelftitle">${title}</h2>
     <a href="/pages/discover.html">See all books →</a>
   </div>
-  <p class="mock-note">Mock data — books, ratings and availability are demo fixtures.</p>
-  <div class="shelf" style="margin-top:1rem" id="popular"></div>
+  <div class="shelf" style="margin-top:1rem" id="shelf"><p class="muted">Loading catalogue…</p></div>
 </section>`;
 
-const pitch = `
+main.innerHTML = search + browse("Discover books") + `
+<section class="section">
+  <h2>Browse by genre</h2>
+  <div class="chipbar" style="margin-top:1rem" id="genrechips"></div>
+</section>
+
 <section class="section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
-  <div class="panel"><h2>📖 Told why</h2><p class="muted">Every recommendation explains itself — matched to your genres, language and reading goals.</p></div>
-  <div class="panel"><h2>📚 Bengaluru-first</h2><p class="muted">Find which branch can hand you the book today, with clearly-labelled availability.</p></div>
+  <div class="panel"><h2>📖 Traceable data</h2><p class="muted">Every record shows its source — Open Library work IDs — so you can verify anything we display.</p></div>
   <div class="panel"><h2>🗣 Kannada &amp; English</h2><p class="muted">ಕನ್ನಡ ಸಾಹಿತ್ಯ sits beside global fiction — in your language.</p></div>
+  <div class="panel"><h2>📚 Library next</h2><p class="muted">Physical Bengaluru holdings are a planned integration — we never guess availability.</p></div>
 </section>`;
 
-main.innerHTML = search + genreSection + popularSection + pitch;
+try {
+  const local = load();
+  let first = "Discover books", items = null, engine = "";
+  if (local.id) {
+    // logged in: try real AI recommendations; only label them as AI if they worked
+    try {
+      const rec = await recommendationService.forReader();
+      if (rec.engine === "groq" && rec.items.length) {
+        items = rec.items; first = "Recommended for your interests"; engine = "groq";
+      }
+    } catch { /* fall through to plain browse */ }
+  }
+  if (!items) {
+    const p = await bookService.search({ page_size: 12 });
+    if (!p.items.length) {
+      document.getElementById("shelf").innerHTML = `<p class="muted">The catalogue is
+        empty right now. It is imported from Open Library by an admin sync
+        (<code>POST /api/catalog/sync</code>) — nothing sample-based is shown instead.</p>`;
+    } else {
+      items = p.items;
+    }
+  }
+  if (items) {
+    document.getElementById("shelftitle").textContent = first;
+    renderShelf(document.getElementById("shelf"), items, { reason: !!engine, engine });
+  }
 
-// Wire interactive pieces.
-renderShelf(document.getElementById("popular"), await recommendationService.forReader(null), { reason: true });
-
-const chipbar = document.getElementById("genrechips");
-chipbar.innerHTML = bookService.genres
-  .map((g) => `<a class="chip" href="/pages/discover.html?genre=${g.id}" style="text-decoration:none">${g.en}<span class="kn">${g.kn}</span></a>`)
-  .join("");
+  document.getElementById("genrechips").innerHTML = bookService.genres
+    .map((g) => `<a class="chip" href="/pages/discover.html?genre=${g[0]}" style="text-decoration:none">${g[1]}<span class="kn">${g[2]}</span></a>`)
+    .join("");
+} catch (e) {
+  document.getElementById("shelf").innerHTML =
+    `<p class="muted">Could not reach the book service — no sample data is shown instead. (${e.message})</p>`;
+}
 
 mountChrome("Home");

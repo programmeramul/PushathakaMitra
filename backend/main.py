@@ -14,9 +14,11 @@ Kept out of the frontend: Mongo credentials and hashing/session secrets come
 from environment variables only.
 """
 import hashlib
+import json
 import os
 import re
 import secrets
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -359,6 +361,167 @@ def update_me(data: ProfileIn, user: dict = Depends(_current_user)):
 
     users.update_one({"_id": user["_id"]}, {"$set": upd})
     return _self_doc(users.find_one({"_id": user["_id"]}))
+
+
+
+# ------------------------------ catalogue ------------------------------
+books_coll = DB["books"]
+books_coll.create_index("source_id", unique=True)
+
+SYNC_TOKEN = os.environ.get("CATALOG_SYNC_TOKEN")
+
+
+def _pub_book(b: dict) -> dict:
+    """Public book shape — only sourced fields, no ratings, no holdings."""
+    return {
+        "id": str(b["_id"]), "title": b["title"], "authors": b.get("authors") or [],
+        "year": b.get("year"), "language": b.get("language"),
+        "subject_slugs": b.get("subject_slugs") or [],
+        "description": b.get("description"),
+        "cover_url": b.get("cover_url"),
+        # provenance is public by design — traceability is the point
+        "source": b.get("source"), "source_id": b.get("source_id"),
+    }
+
+
+@app.get("/api/books")
+def list_books(q: str = "", genre: str = "", lang: str = "",
+               page: int = 1, page_size: int = 24):
+    cur: dict = {}
+    if q.strip():
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        cur["$or"] = [{"title": rx}, {"authors": rx}]
+    if genre:
+        cur["subject_slugs"] = genre
+    if lang:
+        cur["language"] = lang
+    page, page_size = max(1, page), max(1, min(60, page_size))
+    total = books_coll.count_documents(cur)
+    docs = books_coll.find(cur, sort=[("year", -1), ("_id", 1)]
+                           ).skip((page - 1) * page_size).limit(page_size)
+    return {"total": total, "page": page, "page_size": page_size,
+            "items": [_pub_book(b) for b in docs]}
+
+
+@app.get("/api/books/{book_id}")
+def get_book(book_id: str, response: Response):
+    try:
+        b = books_coll.find_one({"_id": book_id})
+    except Exception:
+        b = None
+    if not b:
+        raise _fail(404, "book_not_found", "No such book in the catalogue.")
+    out = _pub_book(b)
+    out["subjects"] = b.get("subjects") or []
+    out["language_codes"] = b.get("language_codes") or []
+    out["isbn"] = b.get("isbn")
+    out["imported_at"] = b.get("imported_at")
+    # similar = share a category slug; honest "None yet" when categories missing
+    slugs = b.get("subject_slugs") or []
+    out["similar"] = ([_pub_book(s) for s in books_coll.find(
+        {"_id": {"$ne": b["_id"]}, "subject_slugs": {"$in": slugs}}).limit(6)]
+        if slugs else [])
+    return out
+
+
+@app.post("/api/catalog/sync")
+def catalog_sync(request: Request):
+    # admin-only, token from env; 503 with a clear message when not configured
+    if not SYNC_TOKEN:
+        raise _fail(503, "sync_unconfigured",
+                    "Set CATALOG_SYNC_TOKEN to enable catalogue sync.")
+    if request.headers.get("X-Admin-Token") != SYNC_TOKEN:
+        raise _fail(401, "bad_admin_token", "Invalid admin token.")
+    from importlib import import_module
+    catalog = import_module("catalog") if not __package__ else import_module("backend.catalog")
+    fetch_books, upsert_books = catalog.fetch_books, catalog.upsert_books
+    totals = {"inserted": 0, "updated": 0, "rejected": 0}
+    for q in json.load(open(os.path.join(os.path.dirname(__file__),
+                                         "catalog_queries.json"))):
+        try:
+            r = upsert_books(books_coll, fetch_books(q["q"], limit=q.get("limit", 100)))
+        except Exception:
+            continue                      # failed query: skip, never fabricate
+        for k in totals:
+            totals[k] += r[k]
+    return {"ok": True, "counts": totals, "total_in_db": books_coll.count_documents({})}
+
+
+# --------------------------- recommendations ---------------------------
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+
+def _keyword_rank(cands: list, interests: list, limit: int = 6) -> list:
+    """Deterministic metadata-only fallback. Labels genre overlap; no ratings."""
+    def score(b):
+        return (-len(set(b.get("subject_slugs") or []) & set(interests)),
+                -(b.get("year") or 0))
+    out = sorted(cands, key=score)[:limit]
+    return [{"id": str(b["_id"]),
+             "reason": "Matches your interest" + ("s" if len(set(b.get("subject_slugs") or []) & set(interests)) > 1 else "") + ": " + ", ".join(
+                 sorted(set(b.get("subject_slugs") or []) & set(interests)))
+             if set(b.get("subject_slugs") or []) & set(interests)
+             else "From the current catalogue"}
+            for b in out]
+
+
+def _groq_rank(cands: list, interests: list) -> Optional[list]:
+    """Ask Groq to pick from candidates. Returns None on any failure."""
+    key = os.environ.get("GROQ_API_KEY")
+    if not key:
+        return None
+    # only titles/authors/categories go out — never the user's PII
+    payload_cands = [{"id": str(b["_id"]), "title": b["title"],
+                      "authors": b.get("authors") or [], "year": b.get("year"),
+                      "categories": b.get("subject_slugs") or []} for b in cands]
+    body = json.dumps({
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {"role": "system", "content":
+             "You recommend books for a reader. From the given candidates ONLY, "
+             "pick the best matches for their reading interests. Respond with "
+             "strict JSON: {\"recommendations\": [{\"id\": \"<candidate id>\", "
+             "\"reason\": \"<one concise sentence, max 20 words, referencing "
+             "only the candidate's own metadata>\"}]}. Use only candidate ids "
+             "from the list. Never invent books, ratings or availability."},
+            {"role": "user", "content": json.dumps(
+                {"interests": interests, "candidates": payload_cands})},
+        ],
+        "temperature": 0.3, "max_tokens": 800,
+        "response_format": {"type": "json_object"},
+    }).encode()
+    req = urllib.request.Request(GROQ_URL, data=body, headers={
+        "Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            content = json.load(resp)["choices"][0]["message"]["content"]
+        recs = json.loads(content).get("recommendations") or []
+    except Exception:
+        return None
+    # validate: keep only known candidate ids with a string reason
+    valid = {str(b["_id"]) for b in cands}
+    out = [{"id": r["id"], "reason": str(r.get("reason") or "")[:200]}
+           for r in recs
+           if isinstance(r, dict) and str(r.get("id")) in valid and r.get("reason")]
+    return out[:6] or None
+
+
+@app.get("/api/recommendations")
+def recommendations(user: dict = Depends(_current_user)):
+    interests = user.get("interests") or []
+    cands = list(books_coll.find(
+        {"subject_slugs": {"$in": interests}} if interests else {},
+        limit=100)) or list(books_coll.find({}, limit=100))
+    if not cands:
+        return {"engine": "empty", "items": []}      # honest empty catalogue
+    recs = _groq_rank(cands, interests)
+    engine = "groq"
+    if recs is None:
+        recs, engine = _keyword_rank(cands, interests), "keyword"
+    by_id = {str(b["_id"]): b for b in cands}
+    return {"engine": engine,
+            "items": [{**_pub_book(by_id[r["id"]]), "reason": r.get("reason", "")}
+                      for r in recs if r["id"] in by_id and r.get("reason")][:6]}
 
 
 if __name__ == "__main__":

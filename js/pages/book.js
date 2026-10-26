@@ -1,28 +1,37 @@
-// Book details + similar row + Find-in-libraries action.
-import { bookService, profileService, libraryService } from "../services/api.js";
+// Book details — only sourced fields; honest gaps (no rating, no holdings claim).
+import { bookService, profileService } from "../services/api.js";
 import { mountChrome, renderShelf, bookCover } from "../ui.js";
 
 const main = document.getElementById("main");
 const id = new URLSearchParams(location.search).get("id");
-const book = await bookService.getBook(id);
+const book = id ? await bookService.getBook(id).catch((e) => ({ error: e })) : null;
 
-if (!book) {
-  main.innerHTML = `<section class="section"><h1>Book not found</h1><p class="muted">Unknown book id “${id}” in the fixture set. <a href="/pages/discover.html">Back to Discover</a></p></section>`;
+if (!book || book.error) {
+  const msg = book && book.error ? book.error.message : "";
+  main.innerHTML = `<section class="section"><h1>${book && book.error ? "Could not load book" : "Book not found"}</h1>
+    <p class="muted">${msg || `No record “${id}” in the catalogue.`}
+    <a href="/pages/discover.html">Back to Discover</a></p></section>`;
 } else {
   const saved = profileService.savedBooks().includes(book.id);
-  const genres = book.genres.map((g) => `<span class="tag">${(bookService.genres.find((x) => x.id === g) || {}).en}</span>`).join(" ");
+  const tags = [
+    book.language ? `<span class="tag">${book.language}</span>` : "",
+    ...(book.subject_slugs || []).map((s) => `<span class="tag">${s.replace(/-/g, " ")}</span>`),
+  ].join(" ");
   main.innerHTML = `
   <section class="section" style="display:grid;grid-template-columns:220px 1fr;gap:2rem;align-items:start">
-    <a href="#" class="bookcard" style="pointer-events:none">${bookCover(book)}</a>
+    <a href="#" class="bookcard" style="pointer-events:none">${bookCover(book, { wide: true })}</a>
     <div>
       <h1>${book.title}</h1>
-      ${book.titleEn ? `<p class="muted serif" style="font-size:1.1rem">${book.titleEn}</p>` : ""}
-      <p><b>${book.author}</b> · ${book.year} · <span class="tag gold">★ ${book.rating.toFixed(1)}</span></p>
-      <p style="display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 1rem">${genres}<span class="tag">${book.language}</span></p>
-      <p style="max-width:60ch">${book.appReason}</p>
+      <p><b>${(book.authors || []).join(", ") || "Author not recorded"}</b>${book.year ? " · " + book.year : ""}</p>
+      <p style="display:flex;gap:.4rem;flex-wrap:wrap;margin:.5rem 0 1rem">${tags}</p>
+      ${book.description
+        ? `<p style="max-width:60ch">${book.description}</p>`
+        : `<p class="muted">No description available from the source for this record.</p>`}
       <div class="panel soft" style="margin:1rem 0 1.5rem;border-left:4px solid var(--gold)">
-        <b>Why we picked this for you</b>
-        <p class="muted" style="margin-top:.3rem">${book.appReason} <span class="mock-note">[MOCK] — generated-from-genre-score today; Groq explanation lands here later.</span></p>
+        <b>Provenance</b>
+        <p class="muted" style="margin-top:.3rem">Metadata from ${book.source}
+        ${book.source_id ? `<a href="https://openlibrary.org${book.source_id}" target="_blank" rel="noopener">${book.source_id} ↗</a>` : ""}.
+        Library availability not yet verified.</p>
       </div>
       <div style="display:flex;gap:.8rem;flex-wrap:wrap">
         <a class="btn" id="findlibs" href="/pages/libraries.html?book=${book.id}">Find in Bengaluru Libraries</a>
@@ -31,10 +40,12 @@ if (!book) {
     </div>
   </section>
   <section class="section">
-    <h2>Similar books</h2>
+    <h2>Similar books <span class="muted" style="font-size:.85rem">· shared categories</span></h2>
     <div class="shelf" style="margin-top:1rem" id="similar"></div>
   </section>`;
-  renderShelf(main.querySelector("#similar"), book.similar || [], { reason: true });
+  if (book.similar && book.similar.length) {
+    renderShelf(main.querySelector("#similar"), book.similar, {});
+  }
   main.querySelector("#savebtn").addEventListener("click", () => {
     profileService.toggleSavedBook(book.id);
     main.querySelector("#savebtn").textContent = profileService.savedBooks().includes(book.id) ? "★ Saved — remove" : "Save to my shelf";
