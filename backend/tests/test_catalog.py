@@ -154,8 +154,8 @@ def test_recommendations_keyword_fallback_engine_labeled():
 
 
 def test_recommendations_groq_ids_validated(monkeypatch):
-    catalog.upsert_books(books_coll, [ol_doc("/works/OLG1W", "Real1"),
-                                      ol_doc("/works/OLG2W", "Real2")])
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLG1W", "Real1", subjects=["Mystery"]),
+                                      ol_doc("/works/OLG2W", "Real2", subjects=["Mystery"])])
     c = _mk_user(["mystery"])
     real = {str(b["_id"]) for b in books_coll.find({})}
     good = next(iter(real))
@@ -208,3 +208,25 @@ def test_groq_rank_requires_key(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     import backend.main as main
     assert main._groq_rank([{"_id": "x"}], []) is None
+
+
+def test_recommendations_no_interests_honest_engine():
+    """Signed-in user with NO interests gets engine 'no_interests', no blanket picks."""
+    c = _mk_user(["mystery"])
+    import uuid as _u
+    email = "noint_" + _u.uuid4().hex[:5] + "@example.com"
+    r = c.post("/api/auth/register", json={"name": "NoI", "email": email,
+                                           "phone": "+919876543210", "age": 35,
+                                           "interests": ["mystery"],
+                                           "password": "pw12345678",
+                                           "password_confirm": "pw12345678"})
+    assert r.status_code == 201
+    import backend.main as main
+    main.users.update_one({"email": email}, {"$unset": {"interests": "", "other_interest": ""}})
+    catalog.upsert_books(books_coll, [ol_doc("/works/OLNIW", "AnonPick", subjects=["History"])])
+    body = c.get("/api/recommendations").json()
+    assert body == {"engine": "no_interests", "items": []}
+
+
+def test_recommendations_require_session():
+    assert TestClient(app).get("/api/recommendations").status_code == 401

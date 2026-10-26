@@ -509,9 +509,10 @@ def _groq_rank(cands: list, interests: list) -> Optional[list]:
 @app.get("/api/recommendations")
 def recommendations(user: dict = Depends(_current_user)):
     interests = user.get("interests") or []
-    cands = list(books_coll.find(
-        {"subject_slugs": {"$in": interests}} if interests else {},
-        limit=100)) or list(books_coll.find({}, limit=100))
+    # no interests yet: say so honestly instead of blanket-recommending
+    if not interests:
+        return {"engine": "no_interests", "items": []}
+    cands = list(books_coll.find({"subject_slugs": {"$in": interests}}, limit=100))
     if not cands:
         return {"engine": "empty", "items": []}      # honest empty catalogue
     recs = _groq_rank(cands, interests)

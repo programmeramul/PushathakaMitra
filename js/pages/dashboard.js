@@ -12,6 +12,7 @@ if (user) {
 
   const label = rec.engine === "groq" ? "✦ Recommended for your interests — AI, from real catalogue records"
     : rec.engine === "keyword" ? "Picked by genre matching from the catalogue (AI suggestions unavailable right now)"
+    : rec.engine === "no_interests" ? "No reading interests saved yet — <a href='/pages/onboarding.html'>complete onboarding</a> to get tailored picks"
     : rec.engine === "empty" ? "The catalogue is empty — nothing to recommend yet"
     : "Could not load recommendations right now";
 

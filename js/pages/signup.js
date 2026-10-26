@@ -196,10 +196,12 @@ function wireLogin() {
       const { user } = await authApi.login(main.querySelector("#email").value.trim(), main.querySelector("#password").value);
       localStorage.setItem("pustakamitra.profile.v1", JSON.stringify({
         id: user.id, name: user.name, email: user.email, interests: user.interests,
-        genres: user.interests, saved: [], onboarded: true, persisted: true,
+        genres: user.interests, saved: [], onboarded: !!user.interests?.length, persisted: true,
       }));
       btn.textContent = "✓";
-      setTimeout(() => (window.location.href = "/pages/discover.html"), 500);
+      // interests saved → Discover with recommendations; none yet → onboarding
+      setTimeout(() => (window.location.href =
+        (user.interests || []).length ? "/pages/discover.html" : "/pages/onboarding.html"), 500);
     } catch (err) {
       btn.disabled = false; btn.textContent = "Log in";
       showErr(err.code === "bad_credentials" ? "__all__" : err.field || "__all__", err.message);

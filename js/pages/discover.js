@@ -1,5 +1,7 @@
 // Discover Books — real Mongo catalogue: search, genre filter, pagination.
-import { bookService } from "../services/api.js";
+// Signed-in users with saved interests ALSO get the personalised section from
+// /api/recommendations (server session decides; 401 = browse-only, honestly).
+import { bookService, recommendationService, load } from "../services/api.js";
 import { mountChrome, renderShelf } from "../ui.js";
 
 const main = document.getElementById("main");
@@ -68,3 +70,32 @@ main.querySelector("#next").addEventListener("click", () => { state.page += 1; r
 
 run();
 mountChrome("Discover");
+
+// ---- personalised section: ONLY when signed in with saved interests ----
+(async () => {
+  if (!load().id) return;                       // anonymous: browse only
+  try {
+    const rec = await recommendationService.forReader();  // 401 = not signed in
+    if (rec.engine === "empty" || !rec.items.length) {
+      // signed in but no interests yet (or empty catalogue)
+      if (rec.engine === "no_interests") {
+        main.querySelector("#sform").closest("section").insertAdjacentHTML("afterend", `
+          <section class="section">
+            <p class="muted">No reading interests saved yet —
+            <a href="/pages/onboarding.html">complete onboarding</a> to get recommendations.</p>
+          </section>`);
+      }
+      return;
+    }
+    const label = rec.engine === "groq"
+      ? "Recommended for you — AI matches from real catalogue records"
+      : "Picked by genre matching from the catalogue (AI suggestions unavailable right now)";
+    main.querySelector("#sform").closest("section").insertAdjacentHTML("afterend", `
+      <section class="section" style="background:var(--ivory-300);border-radius:14px;padding:1.2rem 1.4rem">
+        <h2>Recommended for you</h2>
+        <p class="muted" style="font-size:.9rem">${label}</p>
+        <div class="shelf" style="margin-top:1rem" id="recs"></div>
+      </section>`);
+    renderShelf(main.querySelector("#recs"), rec.items, { reason: true, engine: rec.engine });
+  } catch { /* unauthenticated or backend down: browse-only is already rendered */ }
+})();
