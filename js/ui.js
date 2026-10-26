@@ -1,6 +1,7 @@
 // Shared UI helpers: cover placeholder (restrained, clearly "unavailable"),
 // shelf renderer, nav/footer injection. ES module shared by every page.
 import { load, profileService, libraryService } from "./services/api.js";
+import { authApi } from "./services/auth.js";
 
 // missing-cover placeholder: flat neutral tile with the title, NOT a fake cover
 export function bookCover(b, { wide = false } = {}) {
@@ -55,20 +56,45 @@ export function renderShelf(el, books, { reason = false, engine = "" } = {}) {
 }
 
 export function navbar(active) {
-  const p = load();
-  const links = [
-    ["Home", "/index.html"],
-    ["Discover", "/pages/discover.html"], ["Saved", "/pages/saved.html"],
-    ["Profile", "/pages/profile.html"],
-  ];
+  // base links render immediately (no flash); session-dependent links are
+  // filled by authoriseNavbar() below — localStorage is NOT proof of auth.
   return `<div class="inner">
     <a class="logo" href="/index.html"><span class="mark">ಪ</span>PustakaMitra AI</a>
-    <div class="links">
-      ${links.map(([t, u]) => `<a href="${u}"${active === t ? ' aria-current="page"' : ""}>${t}</a>`).join("")}
-      ${p.email ? `<a class="btn secondary small" href="/pages/profile.html">${p.name}</a>`
-                : `<a class="btn small" href="/pages/signup.html">Sign up</a>`}
+    <div class="links" id="navlinks">
+      <a href="/index.html"${active === "Home" ? ' aria-current="page"' : ""}>Home</a>
+      <a href="/pages/discover.html"${active === "Discover" ? ' aria-current="page"' : ""}>Discover</a>
     </div>
   </div>`;
+}
+
+// Resolve the REAL session from the server (`GET /api/profile/me`, cookies
+// included) and render the right links. Logged out / expired / network error
+// all show Login + Sign up (server truth, never a localStorage fallback).
+export async function authoriseNavbar(active) {
+  const links = document.getElementById("navlinks");
+  if (!links) return;
+  const a = (u, label, cls = "", opts = {}) =>
+    `<a href="${u}"${cls}${opts.page && active === opts.page ? ' aria-current="page"' : ""}>${label}</a>`;
+  let user = null;
+  try { user = await authApi.me(); } catch { /* 401 or offline */ }
+  if (user) {
+    links.innerHTML = a("/index.html", "Home", "", { page: "Home" })
+      + a("/pages/discover.html", "Discover", "", { page: "Discover" })
+      + a("/pages/saved.html", "Saved", "", { page: "Saved" })
+      + a("/pages/profile.html", "Profile", "", { page: "Profile" })
+      + `<a class="btn secondary small" href="/pages/profile.html">${user.name || user.email}</a>`
+      + `<button class="btn small" id="navlogout" aria-label="Log out">Log out</button>`;
+    document.getElementById("navlogout").addEventListener("click", async () => {
+      await authApi.logout();
+      localStorage.removeItem("pustakamitra.profile.v1");
+      window.location.href = "/index.html";
+    });
+  } else {
+    links.innerHTML = a("/index.html", "Home", "", { page: "Home" })
+      + a("/pages/discover.html", "Discover", "", { page: "Discover" })
+      + `<a class="btn secondary small" href="/pages/signup.html#login">Login</a>`
+      + `<a class="btn small" href="/pages/signup.html">Sign up</a>`;
+  }
 }
 
 export function footer() {
@@ -81,7 +107,10 @@ export function footer() {
 
 export function mountChrome(active) {
   const nav = document.getElementById("nav");
-  if (nav) nav.innerHTML = navbar(active);
+  if (nav) {
+    nav.innerHTML = navbar(active);
+    authoriseNavbar(active);   // resolves session server-side, then updates links
+  }
   const foot = document.getElementById("footer");
   if (foot) foot.outerHTML = footer();
 }
