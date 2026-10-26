@@ -5,9 +5,14 @@ FastAPI + MongoDB. user data lives in the `pustakamitra` Mongo database.
 ## Run
 
 ```bash
-python3 backend/main.py        # listens on 127.0.0.1:8001 (Logging via uvicorn)
-# or:
-uvicorn backend.main:app --host 127.0.0.1 --port 8001
+cp .env.example .env          # fill SESSION_HASH_KEY (python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+export $(grep -v '^#' ../.env | xargs)   # or source it in your shell profile
+python3 backend/main.py       # 127.0.0.1:8001
+uvicorn backend.main:app --host 127.0.0.1 --port 8001   # alternative
+
+# automated tests (use throwaway pustakamitra_test database)
+pip3 install --user -r requirements.txt
+python3 -m pytest backend/tests -v
 ```
 
 Mongo connection default `mongodb://localhost:27017`, override with `MONGO_URI`.

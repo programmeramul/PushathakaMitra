@@ -1,0 +1,8 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pymongo>=4.8
+argon2-cffi>=23.1
+email-validator>=2.1
+# test-only
+pytest>=8.0
+httpx>=0.27

@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# secrets & local config
+.env
+*.local
+
+# logs & OS noise
+*.log
+.DS_Store
+
+# editors
+.idea/
+.vscode/

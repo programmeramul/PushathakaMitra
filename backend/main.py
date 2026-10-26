@@ -34,11 +34,12 @@ SESSION_COOKIE = "pm_session"
 SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "180"))
 SESSION_HASH_KEY = os.environ.get("SESSION_HASH_KEY", "dev-only-session-key")
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DB = os.environ.get("MONGO_DB", "pustakamitra")  # tests override to pustakamitra_test
 SECURE_COOKIES = os.environ.get("SECURE_COOKIES") == "1"
 
 ph = PasswordHasher()
 
-DB = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000).pustakamitra
+DB = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)[MONGO_DB]
 users = DB.users
 sessions = DB.sessions
 
