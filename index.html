@@ -39,7 +39,7 @@
     height: 56px; display: flex; align-items: center; position: sticky; top: 0; z-index: 10;
   }
   .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; display: flex; align-items: center; gap: 24px; }
-  .wordmark { color: var(--ink); font: 700 16px/1 var(--mono); white-space: pre; letter-spacing: 0; }
+  .wordmark { color: var(--ink); font: 700 16px/1 var(--mono); white-space: pre; }
   .nav-links { margin-left: auto; display: flex; gap: 20px; align-items: center; font-weight: 500; color: var(--ink); }
   .nav-links a { text-decoration: none; }
 
@@ -73,7 +73,7 @@
   .tabstrip { display: flex; border-bottom: 1px solid var(--hairline-strong); }
   .tab {
     background: transparent; border: none; color: var(--mute); font: 500 16px/2 var(--mono);
-    padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+    padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; min-height: 36px;
   }
   .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ash); }
   .install-snippet {
@@ -111,6 +111,7 @@
   /* chart tiles */
   .charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .chart-tile { background: var(--canvas); border: 1px solid var(--hairline); padding: 16px; color: var(--body); }
+  .chart-tile svg { display: block; width: 100%; height: 64px; }
   .chart-tile .caption { font: 400 14px/2 var(--mono); color: var(--mute); }
 
   /* testimonial */
@@ -171,7 +172,7 @@
       <a href="#">Zen</a>
       <a href="#">Go</a>
       <a href="#">Enterprise</a>
-      <a href="#" class="btn btn-primary">Download ↓</a>
+      <a href="#install" class="btn btn-primary">Download ↓</a>
     </div>
   </div>
 </nav>
@@ -196,7 +197,7 @@
         </div>
         <div class="install-snippet">
           <span id="install-cmd">curl -fsSL https://opencode.ai/install | bash</span>
-          <button class="copy-btn" id="copy-btn" aria-label="Copy install command">[x]</button>
+          <button class="copy-btn" id="copy-btn" aria-label="Copy install command">[x] copy</button>
         </div>
       </div>
     </section>
@@ -213,7 +214,7 @@
   <div class="container">
     <section>
       <h2>What is OpenCode?</h2>
-      <p>A coding agent for the terminal. OpenCode has the ability to read the codebase, make edits across multiple files, and run commands — [+] all from a single prompt.</p>
+      <p>A coding agent for the terminal. OpenCode has the ability to read the codebase, make edits across multiple files, and run commands — all from a single prompt.</p>
       <div class="list-row">[+] <b>LSP enabled</b> Automatically loads the right LSPs for the IDE</div>
       <div class="list-row">[-] <b>Agency</b> One-shot changes with minimal prompting</div>
       <div class="list-row">[x] <b>Rules</b> Define behavior with AGENTS.md files</div>
@@ -222,9 +223,18 @@
     <section>
       <h2>Open source, at scale</h2>
       <div class="charts">
-        <div class="chart-tile">╶╶╷╴╷╶╴╷╴<div class="caption">Fig 1. 150K GitHub Stars</div></div>
-        <div class="chart-tile">·╷·╷·╷·╷·<div class="caption">Fig 2. 850 Contributors</div></div>
-        <div class="chart-tile">╷╶╴╶╴╶╴╶<div class="caption">Fig 3. 6.5M Monthly Devs</div></div>
+        <div class="chart-tile">
+          <svg viewBox="0 0 120 32" aria-hidden="true"><polyline points="0,24 20,20 40,22 60,14 80,16 100,8 120,4" fill="none" stroke="#424245" stroke-width="1" stroke-dasharray="3 3"/></svg>
+          <div class="caption">Fig 1. 150K GitHub Stars</div>
+        </div>
+        <div class="chart-tile">
+          <svg viewBox="0 0 120 32" aria-hidden="true"><polyline points="0,28 24,26 48,20 72,18 96,10 120,6" fill="none" stroke="#424245" stroke-width="1" stroke-dasharray="1 4"/></svg>
+          <div class="caption">Fig 2. 850 Contributors</div>
+        </div>
+        <div class="chart-tile">
+          <svg viewBox="0 0 120 32" aria-hidden="true"><polyline points="0,30 30,24 60,16 90,10 120,2" fill="none" stroke="#424245" stroke-width="1"/></svg>
+          <div class="caption">Fig 3. 6.5M Monthly Devs</div>
+        </div>
       </div>
     </section>
 
@@ -233,7 +243,7 @@
       <div class="testimonial-row">
         <div class="avatar"></div>
         <div>
-          <div class="who">Amul &lt;amul @opencode&gt; <small>· Engineer</small></div>
+          <div class="who">Amul <small>&lt;amul @opencode&gt; · Engineer</small></div>
           <div>“OpenCode is the first agent that feels like a tool, not a toy. It lives where I already work.”</div>
         </div>
       </div>
