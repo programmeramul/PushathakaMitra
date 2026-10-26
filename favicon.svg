@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#1b4332"/>
+  <!-- open book -->
+  <path d="M16 23c-2.2-1.8-5.2-2.6-8-2.6V8.5c2.8 0 5.8.8 8 2.6 2.2-1.8 5.2-2.6 8-2.6v11.9c-2.8 0-5.8.8-8 2.6z"
+        fill="#faf6ef"/>
+  <path d="M16 11.1v11.9" stroke="#c2871d" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="16" cy="7.2" r="4.4" fill="#c2871d"/>
+  <text x="16" y="9.5" font-family="Noto Sans Kannada, sans-serif" font-size="6.6"
+        font-weight="700" text-anchor="middle" fill="#faf6ef">ಪ</text>
+</svg>
