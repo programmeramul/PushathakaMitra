@@ -1225,9 +1225,10 @@ def _library_links(message: str, locality: Optional[str]) -> dict:
                      "availability is UNVERIFIED for every book.")
     return {
         "verified": False,
-        "note": ("No verified Bengaluru library location dataset is integrated "
-                 "yet, so I can't confirm addresses or holdings. These official "
-                 "search pages are the reliable starting point for " + q + ":"),
+        "note": ("Library locations and contacts below come from the uploaded "
+                 "Bengaluru dataset, but individual book holdings and borrowing "
+                 "availability are unverified. These official pages are the "
+                 "reliable starting point for " + q + ":"),
         "links": [
             {"label": "City Central Library — State Library Directory",
              "url": "https://karnataka.gov.in/newpage/Public%20Libraries.aspx"},
@@ -1274,15 +1275,7 @@ def chat(data: ChatIn, user: dict = Depends(_current_user)):
             "engine": "library_search",
             "reply": reply_text,
             "books": [],
-            "library": {
-                "verified": True,
-                "note": "Integrated Bengaluru library dataset.",
-                "links": [
-                    {"label": "City Central Library — State Library Directory", "url": "https://karnataka.gov.in/newpage/Public%20Libraries.aspx"},
-                    {"label": "e-Granthalaya catalogue", "url": "https://egranthalaya.nic.in/"},
-                ],
-                "holdings": {"available": False, "note": "Holdings unverified."}
-            },
+            "library": _library_links(msg, data.locality),
             "libraries": lib_results,
         }
 
