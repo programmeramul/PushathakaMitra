@@ -111,7 +111,7 @@ The library discovery system is powered by a merged dataset:
 
 ## 📚 Full Installation Guide
 
-For **detailed platform-specific instructions** (Windows, macOS, Linux), including troubleshooting and testing, refer to the **[Full Installation Guide](FULL_INSTALLATION_GUIDE.md)**.
+For **detailed platform-specific instructions** (Windows, macOS, Linux), including troubleshooting and testing, refer to the **[Full Installation Guide](FULL_INSTALLATION_GUIDE_STYLED.md)**.
 
 ## 🧪 Running Tests
 
