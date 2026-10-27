@@ -30,7 +30,7 @@ PustakaMitra AI is an intelligent reading companion designed for Kannada and Eng
 ### Installation
 1. **Clone the repository**:
    ```bash
-   git clone <your-repo-url>
+   git clone <https://github.com/programmeramul/PushathakaMitra.gitl>
    cd PusathakaMitra
    ```
 
